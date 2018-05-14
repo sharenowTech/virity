@@ -1,4 +1,7 @@
 # Virity
+[![Go Report Card](https://goreportcard.com/badge/github.com/car2go/virity)](https://goreportcard.com/report/github.com/car2go/virity)
+![license](https://img.shields.io/github/license/mashape/apistatus.svg)
+[![Build Status](https://travis-ci.org/car2go/virity.svg?branch=master)](https://travis-ci.org/car2go/virity)
 
 ![Virity-Logo](docs/logo.svg)
 
