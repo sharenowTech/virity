@@ -1,0 +1,36 @@
+#Config via env variables example:
+# export VIRITY_GENERAL_AGENTENV=k8s
+# export VIRITY_STORE_INTERVAL_AGENTPUSH=10m
+# --> use _ as separator and remove - 
+
+# possible config locations /etc/virity  $HOME/.virity   ./config.yml
+
+general:
+  loglevel: "DEBUG" # DEBUG, INFO, WARN, ERROR, CRITICAL, NONE
+  logtype: "JSON" #ASCII, JSON
+  agent-lifetime: "2h" # agent is treated as down if no update during lifetime
+  agent-seed: 0 # seed of agent uid - if a id already exists you can tweak using this number
+  agent-env: "docker" # k8s = kubernetes, docker = docker, batch = CRON - default is docker
+
+scanner:
+  type: "anchore"
+  endpoint: "http://localhost:8228"
+  username: "admin"
+  password: "foobar"
+  severity-level: 0 # 0=high, 1=medium, 2=low, 3=negligible (CVEs one level lower than the provided level are shown as warning)
+
+
+monitor:
+  type: "sensu"
+  endpoint: "localhost:3030"
+  username: ""
+  password: ""
+  default-assignee: "virity" # fallback owner of tickets
+  create-tickets: true
+
+store:
+  type: "etcd"
+  endpoint: "http://localhost:2379"
+  interval:
+    agentPush: "20m" # interval when agent sends container (should be at least stackInterval/3)
+    serverPoll: "5m" # interval when server pulls container for analysis

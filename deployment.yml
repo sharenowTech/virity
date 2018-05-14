@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: virity-agent
+  namespace: kube-system
+  labels:
+    app: virity-agent
+spec:
+  selector:
+    matchLabels:
+      app: virity-agent
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: virity-agent
+        virity.owner: VIRITY
+      name: virity-agent
+    spec:
+      containers:
+      - name: virity-agent
+        image: virity-agent:latest
+        imagePullPolicy: Always
+        env:
+          - name: VIRITY_GENERAL_AGENTENV
+            value: k8s
+          - name: VIRITY_STORE_ENDPOINT
+            value: http://localhost:2379
