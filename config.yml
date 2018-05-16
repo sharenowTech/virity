@@ -14,7 +14,7 @@ general:
 
 scanner:
   type: "anchore"
-  endpoint: "http://192.168.99.100:8228"
+  endpoint: "http://localhost:8228"
   username: "admin"
   password: "foobar"
   severity-level: 0 # 0=high, 1=medium, 2=low, 3=negligible (CVEs one level lower than the provided level are shown as warning)
@@ -22,7 +22,7 @@ scanner:
 
 monitor:
   type: "sensu"
-  endpoint: "192.168.99.100:3030"
+  endpoint: "localhost:3030"
   username: ""
   password: ""
   default-assignee: "virity" # fallback owner of tickets
@@ -30,7 +30,7 @@ monitor:
 
 store:
   type: "etcd"
-  endpoint: "http://192.168.99.100:2379"
+  endpoint: "http://localhost:2379"
   interval:
     agentPush: "20m" # interval when agent sends container (should be at least stackInterval/3)
     serverPoll: "5m" # interval when server pulls container for analysis
