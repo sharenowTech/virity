@@ -1,0 +1,46 @@
+version: '2'
+services:
+  anchore-engine:
+    image: docker.io/anchore/anchore-engine:latest
+    #privileged: true
+    depends_on:
+      - anchore-db
+    ports:
+      - "8228:8228"
+      - "8338:8338"
+     #- /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # NOTE: this should be set to the same name as this service (e.g. anchore-engine)
+      - ANCHORE_HOST_ID=anchore-engine
+    volumes:
+      - ${PWD}/anchore_config.yml:/config/config.yaml:Z
+  anchore-db:
+    image: kaitsh/anchore_test_db
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+      - PGDATA=/opt/anchore-data
+  etcd:
+    image: quay.io/coreos/etcd:v3.3
+    command: 
+      - "/usr/local/bin/etcd"
+      - "--advertise-client-urls=http://0.0.0.0:2379"
+      - "--listen-client-urls=http://0.0.0.0:2379"
+    ports:
+      - "2379:2379"
+  
+  sensu-server:
+    image: hiroakis/docker-sensu-server
+    ports:
+      - "10022:22"
+      - "3000:3000"
+      - "4567:4567"
+      - "5671:5671"
+      - "15672:15672"
+
+  sensu-client:
+    image: kaitsh/sensu-client-testing:latest
+    depends_on:
+      - sensu-server
+    ports:
+      - "3031:3031"
+      - "3030:3030"
