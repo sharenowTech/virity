@@ -1,3 +1,7 @@
+sudo: required
+services:
+  - docker
+
 language: go
 notifications:
   email: false
@@ -5,5 +9,16 @@ notifications:
 go:
   - "1.10.x"
 
-script: 
-  - make lint
+jobs:
+  include:
+    - script:
+        - make lint
+    - script:
+        - cd test_env
+        - docker-compose -f docker-compose.yml up -d
+        - cd ..
+        - sleep 30s
+        - make test
+    
+      
+        
