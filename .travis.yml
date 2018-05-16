@@ -11,14 +11,14 @@ go:
 
 jobs:
   include:
-    - stage: testing
-      script:
+    - script:
         - make lint
-      script:
+    - script:
         - cd test_env
         - docker-compose -f docker-compose.yml up -d
         - cd ..
-        - sleep 35s
+        - sleep 30s
         - make test
+    
       
         
