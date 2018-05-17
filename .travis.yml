@@ -19,17 +19,17 @@ jobs:
         - cd ..
         - sleep 30s
         - make test
-    stage: build-latest
+    - stage: build-latest
         if: branch = master
         - script:
           - echo "build on master"
 
-    stage: build-latest
+    - stage: build-latest
         if: branch = develop
         - script:
           - echo "build on develop"
 
-    stage: build
+    - stage: build
         if: tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+
         - script:
           - echo "build on tag"
