@@ -12,9 +12,10 @@ go:
 jobs:
   include:
     - stage: test
-      - script:
+      script:
         - make lint
-      - script:
+    - stage: test
+      script:
         - cd test_env
         - docker-compose -f docker-compose.yml up -d
         - cd ..
