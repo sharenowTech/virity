@@ -42,14 +42,6 @@ jobs:
       if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
       script:
         - make bin VERSION=${TRAVIS_TAG}
-    - stage: build
-      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
-      script:
-        - make docker VERSION=${TRAVIS_TAG}
-
-    - stage: deploy to github
-      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
-      script: skip
       deploy: &github
         provider: releases
         api_key:
@@ -58,5 +50,9 @@ jobs:
           - virity-server-linux-amd64-v${TRAVIS_TAG}
           - virity-agent-linux-amd64-v${TRAVIS_TAG}
         skip_cleanup: true
+    - stage: build
+      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
+      script:
+        - make docker VERSION=${TRAVIS_TAG}
 
       
