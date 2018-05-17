@@ -12,29 +12,29 @@ go:
 jobs:
   include:
     - stage: test
-        script:
-          - make lint
-        script:
-          - cd test_env
-          - docker-compose -f docker-compose.yml up -d
-          - cd ..
-          - sleep 30s
-          - make test
+      script:
+        - make lint
+      script:
+        - cd test_env
+        - docker-compose -f docker-compose.yml up -d
+        - cd ..
+        - sleep 30s
+        - make test
 
     - stage: build-latest
-        if: branch = master
-        script:
-          - echo "build on master"
+      if: branch = master
+      script:
+        - echo "build on master"
 
     - stage: build-latest
-        if: branch = develop
-        script:
-          - echo "build on develop"
+      if: branch = develop
+      script:
+        - echo "build on develop"
 
     - stage: build
-        if: tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+
-        script:
-          - echo "build on tag"
+      if: tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+
+      script:
+        - echo "build on tag"
     
       
         
