@@ -11,14 +11,51 @@ go:
 
 jobs:
   include:
-    - script:
+    - stage: test
+      script:
         - make lint
-    - script:
+    - stage: test
+      script:
         - cd test_env
         - docker-compose -f docker-compose.yml up -d
         - cd ..
         - sleep 30s
         - make test
-    
+
+    - stage: build
+      if: branch = master
+      script:
+        - make bin VERSION=latest
+    - stage: build
+      if: branch = master
+      script:
+        - make docker VERSION=latest
+    - stage: build
+      if: branch = develop
+      script:
+        - make bin VERSION=test
+    - stage: build
+      if: branch = develop
+      script:
+        - make docker VERSION=test
+    - stage: build
+      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
+      script:
+        - make bin VERSION=${TRAVIS_TAG}
+        - ls build
+      deploy: &github
+        provider: releases
+        api_key:
+          secure: Kc6RbhmfHWMCjlKLWSWqlaFKM7Z4kxs2I1Sd7q8Nthw32lPuQ3cSO2YEURWvtPTV5xrJIcW5HP4utSKl9b/h0eXVqluUpVjxbCqgB4iwdj7WWutswnpvXIhlmFzacngMXHCY6363Myoq3rZtIJ8KXr1pLYBQ4Ik3ePsJ8hCzUQm7L9JsxSVGDhLlEVsEjLdBMKZ7/XBCcn/tgbT/wDs+Ru3IoXpIhTjJbEiOriP38viPgHvqbJmjn2HNqK0oP8RT5Bx2o7IUJaXgdsFBOtq/r2sqKuxWk4nBb2B7qvOdjs8nQQ+xKkIcTKwQ0uB2emHCYoPdh8jtXrvPEHmZ1UqzVuCem3WjKm4Hea1DYMaJOtEylpjWtWlyYVdMicQhVvjCgtwTacM7o7fddmnggWxbpI+ESTrV84T24NLHO2kRYTGe0fvmkNZGmWJNSDMg+wl5YPup2Em/j1Rim67bzxj7HcvwdMW2sL+gGs0YjQi0ubHuLg03Lj27i8Y3HEx107bsop1ocbWSyM7q/KLUhIYo33SJyEH2K6KuJgF5SozLBWoC7XCz5tiaegxSJd4w965mlAC2TNPJm5KBw7J/g27TpDY5JSvwYHtpQg1GdHNV7XEPcFZa0hxFyFl+dOGerz2ObZRaMsQxFP08rrjXAHCTkYjqNztSieW+aEUnkP7iO3o=
+        file: 
+          - "build/virity-server-linux-amd64-v${TRAVIS_TAG}"
+          - "build/virity-agent-linux-amd64-v${TRAVIS_TAG}"
+        skip_cleanup: true
+        on:
+          tags: true
+    - stage: build
+      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
+      script:
+        - make docker VERSION=${TRAVIS_TAG}
+
       
-        
