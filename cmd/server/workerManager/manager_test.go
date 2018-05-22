@@ -149,7 +149,7 @@ func TestSplitCGroup(t *testing.T) {
 		},
 	}
 
-	groups := splitCGroup(&g, 3)
+	groups := splitCGroup(&g, 6)
 
 	for _, slice := range groups {
 		t.Log(slice)

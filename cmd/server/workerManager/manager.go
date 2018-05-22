@@ -147,13 +147,21 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 	return
 }
 
+// splitCGroup splits a single CGroup into n Cgroups
+// n is the number of CGroups
 func splitCGroup(group *pluginregistry.ContainerGroup, n int) []pluginregistry.ContainerGroup {
-	capacity := (len(group.Container) + n - 1) / n
+	if n > len(group.Container) {
+		n = len(group.Container)
+	}
+	if n < 1 {
+		n = 1
+	}
+	elements := (len(group.Container) + n - 1) / n
+	slices := make([]pluginregistry.ContainerGroup, n)
 
-	slices := make([]pluginregistry.ContainerGroup, capacity)
 	for index := range slices {
-		start := index * n
-		end := start + n
+		start := index * elements
+		end := start + elements
 		if end > len(group.Container) {
 			end = len(group.Container)
 		}
