@@ -17,6 +17,7 @@ jobs:
   - stage: test
     script:
     - make lint
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   - stage: test
     script:
     - cd test_env
