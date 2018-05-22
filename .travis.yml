@@ -1,63 +1,63 @@
 sudo: required
 services:
-  - docker
-
+- docker
 language: go
 notifications:
   email: false
-
 go:
-  - "1.10.x"
-
+- 1.10.x
 jobs:
   include:
-    - stage: test
-      script:
-        - make lint
-    - stage: test
-      script:
-        - cd test_env
-        - docker-compose -f docker-compose.yml up -d
-        - cd ..
-        - sleep 35s
-        - make test
+  - stage: test
+    script:
+    - make lint
+  - stage: test
+    script:
+    - cd test_env
+    - docker-compose -f docker-compose.yml up -d
+    - cd ..
+    - sleep 35s
+    - make test
+  - stage: build
+    if: branch = master
+    script:
+    - make bin VERSION=latest
+  - stage: build
+    if: branch = master
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - make docker VERSION=latest REPOSITORY=car2go
+  - stage: build
+    if: branch = develop
+    script:
+    - make bin VERSION=test
+  - stage: build
+    if: branch = develop
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - make docker VERSION=test REPOSITORY=car2go
+  - stage: build
+    if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
+    script:
+    - make bin VERSION=${TRAVIS_TAG}
+    - ls build
+    deploy:
+      provider: releases
+      api_key:
+        secure: Kc6RbhmfHWMCjlKLWSWqlaFKM7Z4kxs2I1Sd7q8Nthw32lPuQ3cSO2YEURWvtPTV5xrJIcW5HP4utSKl9b/h0eXVqluUpVjxbCqgB4iwdj7WWutswnpvXIhlmFzacngMXHCY6363Myoq3rZtIJ8KXr1pLYBQ4Ik3ePsJ8hCzUQm7L9JsxSVGDhLlEVsEjLdBMKZ7/XBCcn/tgbT/wDs+Ru3IoXpIhTjJbEiOriP38viPgHvqbJmjn2HNqK0oP8RT5Bx2o7IUJaXgdsFBOtq/r2sqKuxWk4nBb2B7qvOdjs8nQQ+xKkIcTKwQ0uB2emHCYoPdh8jtXrvPEHmZ1UqzVuCem3WjKm4Hea1DYMaJOtEylpjWtWlyYVdMicQhVvjCgtwTacM7o7fddmnggWxbpI+ESTrV84T24NLHO2kRYTGe0fvmkNZGmWJNSDMg+wl5YPup2Em/j1Rim67bzxj7HcvwdMW2sL+gGs0YjQi0ubHuLg03Lj27i8Y3HEx107bsop1ocbWSyM7q/KLUhIYo33SJyEH2K6KuJgF5SozLBWoC7XCz5tiaegxSJd4w965mlAC2TNPJm5KBw7J/g27TpDY5JSvwYHtpQg1GdHNV7XEPcFZa0hxFyFl+dOGerz2ObZRaMsQxFP08rrjXAHCTkYjqNztSieW+aEUnkP7iO3o=
+      file:
+      - build/virity-server-linux-amd64-v${TRAVIS_TAG}
+      - build/virity-agent-linux-amd64-v${TRAVIS_TAG}
+      skip_cleanup: true
+      on:
+        tags: true
+  - stage: build
+    if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - make docker VERSION=${TRAVIS_TAG} REPOSITORY=car2go
 
-    - stage: build
-      if: branch = master
-      script:
-        - make bin VERSION=latest
-    - stage: build
-      if: branch = master
-      script:
-        - make docker VERSION=latest
-    - stage: build
-      if: branch = develop
-      script:
-        - make bin VERSION=test
-    - stage: build
-      if: branch = develop
-      script:
-        - make docker VERSION=test
-    - stage: build
-      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
-      script:
-        - make bin VERSION=${TRAVIS_TAG}
-        - ls build
-      deploy: &github
-        provider: releases
-        api_key:
-          secure: Kc6RbhmfHWMCjlKLWSWqlaFKM7Z4kxs2I1Sd7q8Nthw32lPuQ3cSO2YEURWvtPTV5xrJIcW5HP4utSKl9b/h0eXVqluUpVjxbCqgB4iwdj7WWutswnpvXIhlmFzacngMXHCY6363Myoq3rZtIJ8KXr1pLYBQ4Ik3ePsJ8hCzUQm7L9JsxSVGDhLlEVsEjLdBMKZ7/XBCcn/tgbT/wDs+Ru3IoXpIhTjJbEiOriP38viPgHvqbJmjn2HNqK0oP8RT5Bx2o7IUJaXgdsFBOtq/r2sqKuxWk4nBb2B7qvOdjs8nQQ+xKkIcTKwQ0uB2emHCYoPdh8jtXrvPEHmZ1UqzVuCem3WjKm4Hea1DYMaJOtEylpjWtWlyYVdMicQhVvjCgtwTacM7o7fddmnggWxbpI+ESTrV84T24NLHO2kRYTGe0fvmkNZGmWJNSDMg+wl5YPup2Em/j1Rim67bzxj7HcvwdMW2sL+gGs0YjQi0ubHuLg03Lj27i8Y3HEx107bsop1ocbWSyM7q/KLUhIYo33SJyEH2K6KuJgF5SozLBWoC7XCz5tiaegxSJd4w965mlAC2TNPJm5KBw7J/g27TpDY5JSvwYHtpQg1GdHNV7XEPcFZa0hxFyFl+dOGerz2ObZRaMsQxFP08rrjXAHCTkYjqNztSieW+aEUnkP7iO3o=
-        file: 
-          - "build/virity-server-linux-amd64-v${TRAVIS_TAG}"
-          - "build/virity-agent-linux-amd64-v${TRAVIS_TAG}"
-        skip_cleanup: true
-        on:
-          tags: true
-    - stage: build
-      if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
-      script:
-        - make docker VERSION=${TRAVIS_TAG}
 env:
   matrix:
-  - secure: ilGH9/1NuMtEoNXdEAVLWYafvMXGcC7SkTd0GXlBANeaEF/kLjIIgMOFXIH7uCAvow4u7ead0CcAe/QMP49yE/cakbUzy5+FpIY5Z+fTqwryffeLZluUSSD/vt2reT4tnKA6tfdwruQdpVFt+LZt8QxY0Uaiw3rIIJR2Pzfdi4788QzME4EQkRNlGwyYf/YPXQAEdcR/4cTmbFVdsMwpokmp8EDJ5T2tBJxo7T+w9fZILieAPZCcZD9SBzwmHIndJMOIhqtqwEjXqqXIE8osPntZkOPnBuy1RXJWz73YsXX9QDPK8TnLNJ+KA3BojXia4NgiYXjAUgliKJpg+JvAd0EH8K9ZHbsUBJIJt4YB9uYjK8u8fsqwh16mtGrMuSzoyt6PBcZqkBdgUg8NdQ5GFRn8DER/K+49Okd6BvSdnFmGJvAQUKjbkbRUOnFFvvwsbmwoxYDK3f3m9jB7y8YMKsYQNvzT3MP3AS+EHsNoyMtGrIsejIaLgUH1KAKBJzKgsURpUsQE2oaIyzCpNI1CnSCY20nNhBq0/LJ80jHHKevc0JnEmefnUn235KJoSbi80Vh1DCpk4yXmlSG5hNkSPWfXr9CBrZ04II6oaHJwg2RXaHbuk/YFctVlfaUHr9w/Pm8mGgBkoym1WwYrX1XMaQCqbGGysq3eys74Olrcba4=
-  - secure: Tc4cDIwNLkpDkAPhZuoGsdmzzvXTy1CAgJbOVGn9MjH+YmjSDXsT/A7tVgPI3OkJWg025ZmJmyoMFnZzIuGJ8A9IxH7rD6Owkah8HIBFuQkEMC1sy2l/xfdteh495DBJLpF10Pnp1QRaItvfuIWXh0Y3SQZ8C1tRAylxip6ftn0ZbJoXCpv0ZyKtG2NEWLTvr45F1K4ZecyKkc5/cB6bB7VMEP5FsMjMFLjHwqsiiEodmoL9LtKVuCoJKjcsMyhwzbwDAJP/PxE4SEQnVSJDZGRBp6LV6qN5Sr3+6SouTRsuqk4Mz/toKa1FOCfKlc4vdOciG/i0Yo9MYOjbCNTzH+H9UBrIhF0sDEcxUaSlJX1LbNhl1k1/lqa9NNzKYJUf1MrN+b+2wO08EMIy6h5QxxXy5f+PKuHHyti7A6h5d8lIH20q5ukkZ87u1YC3CiaWf/kxeuvYfa9/mgceFQhPpJhXHWS7U7Pbr1VjGHkEJNuLTfPBEVxG7CQZIjtkRxbnG9Isk5xV8nZ//h2Vjx2QOCVRmXw1HyAi7u9N3thBPMxqvpqIdblp2lKvjj5isC1kd8l2z7KDwtuGOfaYrRW/2PcSJORycMGB9QmqDHI9D2Wsyr7nGmo9wa66idCl6uJfnntjgzWeGHeMHFr90XpH1p4EBPTxa9ljNsDLzt+hI1o=
+  - secure: YVJ8taHsDMR0fllMke+8wqezbb+CIUaFMG/lRAAbyV2y/3WFPjEDQq+bWhVMJRmi5XULFWFuVwlgsDM5SxF2+qb57ZuT7QIYJeTtZEEEE54U5Rdge9J5uxNCyb7cbJelmR+T5H0lbf9lZZX+yle8PhB2+J2byZfn52Y6avUfOBSl/5HCUJjmRlkPavQNLJP56GlL+oHJnDutM3PalVrkDEWRrq89F1X2B26/9tneqVgfmpG9P/Vg0k05CytW/m4pYjJf/Y7Ttl5L8E39UzLGijiLXFkl0E+cLxGhx74PckaspwrZ2tpgbKRomFcZozXCjFH3khW36kvS4Sr1/Y/YTCPy1RtaWm68z/Jc5ztLFroweC9nBun9DIgzp6F/95RnDJ9H34lO24ml1druy9aA2vyRq3oW6Za7VKIhQq8CWTfIHXkIA270FhQ599RAMS82iQ+Od7jojOEkMGwDhQorIYtdfY2SQ/QToXOKASSwfhDz5REhYcjiSpTPMF2p/EMQGoR4aOO81NS4TTdpfM4tWHFS9PRtTDoDfA0828p9hMwWSzrpUiLhEhJcUWmZVhxf/A8VswIR5q2zSiOdegrhLEMVlbMynZZvqmSKbpk+h6EEWARyO4FAfk1Wy9iLL9vyLct2BlLD7DWj0l7pr0JRTSG3yfLFTrFaGuap2zntUV4=
+  - secure: R3JT5VzPZ3Jk/OrpHdWeHOxE/IE1ZzZZ7hy0Ugd/KjAnZG5aAhOq3iSCTrBlzvaepwnYLZopoOU1mhJuLtHLwqIKLzKiTMBOSfvudbaKrjwNRajUKclmLc0+U5XOa26D8MYHe7im34QYx1H67WieGD7988AjAjVBuT5wiEW9BXidwdzNT5lqOW/ZqpG90PXvV7aXHxBsHoUs3Okw6XOF7jABgHZkmhrU4fNQu2gVjDGoTHhRitH+o6qGbNC1203kRf07r+UVpySqn0qe8lkiGeu2rgmSb67VU7hb9kNw1lgi6SNMpQaTn5t6aCYwg7xSTOXPqLve9Z/HhQpLki5pbTOuCNaIDXNETemcTGnptl0hnOVtjKCp/+Lkl84pit9Ifu/Gnqn68CUjIe1NoYjjfr7M5bPEbW8drnao0nCcUIyNqboSGUbC7Q4O66VyIcxKwGX6aTD7m2JV6LknexIVSJwCAc/lmLQq4q3rJEmCYIyBzjLorjV36/inkEeDDIIggsakPVdyM+samBswRDeieMhnlUJzBY5LiDYbTMDpTDdjkXE4oIKuY6WC7Z7ZcS50BdVLrmaUe3hH37s7CRhITbEpSH0l9Vh5cNl16eIoNKEURO0j1+D7gg3PiLOD6uP4KV1M5EZKsYe1bZ31GHl1n79KytE2Vy78V0sYyMSBnYM=
