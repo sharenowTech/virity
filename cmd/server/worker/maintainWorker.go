@@ -1,8 +1,6 @@
 package worker
 
 import (
-	"sync"
-
 	"github.com/car2go/virity/cmd/server/image"
 	"github.com/car2go/virity/internal/log"
 )
@@ -10,6 +8,11 @@ import (
 type maintainWorker struct {
 	env Environment
 	F   maintainWorkerFunc
+}
+
+type MaintainTask struct {
+	Env  Environment
+	Func func(env Environment) error
 }
 
 type maintainWorkerFunc struct{}
@@ -42,20 +45,15 @@ func (f maintainWorkerFunc) Restore(env Environment) error {
 }
 
 // Run worker function as go func
-func (mw maintainWorker) Run(wg *sync.WaitGroup, work ...func(env Environment) error) {
-	wg.Add(1)
-	go func() {
-		for _, F := range work {
-			err := F(mw.env)
-			if err != nil {
-				log.Error(log.Fields{
-					"package":  "main/worker",
-					"function": "Run",
-					"worker":   "maintainWorker",
-					"error":    err.Error(),
-				}, "Maintain worker failed")
-			}
-		}
-		wg.Done()
-	}()
+func (mt MaintainTask) Work() {
+	err := mt.Func(mt.Env)
+	if err != nil {
+		log.Error(log.Fields{
+			"package":  "main/worker",
+			"function": "Run",
+			"worker":   "maintainWorker",
+			"error":    err.Error(),
+		}, "Maintain worker failed")
+	}
+
 }
