@@ -96,6 +96,8 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 	var wg sync.WaitGroup
 
 	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
+	running := pluginregistry.ContainerGroup{}
+	analyse := pluginregistry.ContainerGroup{}
 
 	man.agents.Range(func(k, v interface{}) bool {
 		key := k.(string)
@@ -112,7 +114,7 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			return true
 		}
 
-		// If agent was just created and no lastestCGroupID exists
+		// If agent was not just created (if agent has a lastestCGroupID)
 		if val.latestCGroupID != 0 {
 			then := time.Unix(val.latestCGroupID, 0)
 			duration := time.Since(then)
@@ -124,30 +126,11 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			}
 		}
 
-		cWorker := env.InitCGroupWorker(*cGroup)
-
+		// If nothing has changed during last fetch
 		if val.latestCGroupID == cGroup.ID {
-			log.Debug(log.Fields{
-				"package":       "main/workerManager",
-				"function":      "Run",
-				"agent":         key,
-				"agent_active":  val.active,
-				"last_cGroupID": val.latestCGroupID,
-				"last_check":    val.lastCheck,
-				"cGroupID":      cGroup.ID,
-			}, "Run cGroupWorker for add active images")
-			cWorker.Run(&wg, cWorker.F.Running)
+			running.Container = append(running.Container, cGroup.Container...)
 		} else {
-			log.Debug(log.Fields{
-				"package":       "main/workerManager",
-				"function":      "Run",
-				"agent":         key,
-				"agent_active":  val.active,
-				"last_cGroupID": val.latestCGroupID,
-				"last_check":    val.lastCheck,
-				"cGroupID":      cGroup.ID,
-			}, "Run cGroupWorker for analysing images")
-			cWorker.Run(&wg, cWorker.F.Running, cWorker.F.Analyse)
+			analyse.Container = append(analyse.Container, cGroup.Container...)
 		}
 
 		val.lastCheck = time.Now()
@@ -162,6 +145,22 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 	mWorker := env.InitMaintainWorker()
 	mWorker.Run(&wg, mWorker.F.Resolve, mWorker.F.Backup)
 	return
+}
+
+func splitCGroup(group *pluginregistry.ContainerGroup, n int) []pluginregistry.ContainerGroup {
+	capacity := (len(group.Container) + n - 1) / n
+
+	slices := make([]pluginregistry.ContainerGroup, capacity)
+	for index := range slices {
+		start := index * n
+		end := start + n
+		if end > len(group.Container) {
+			end = len(group.Container)
+		}
+		slices[index].Container = group.Container[start:end]
+	}
+
+	return slices
 }
 
 // CleanUp store and manager data
