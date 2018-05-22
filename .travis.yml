@@ -19,7 +19,7 @@ jobs:
         - cd test_env
         - docker-compose -f docker-compose.yml up -d
         - cd ..
-        - sleep 30s
+        - sleep 35s
         - make test
 
     - stage: build
@@ -57,5 +57,7 @@ jobs:
       if: tag =~ ^[0-9]+\.[0-9]+\.[0-9]+
       script:
         - make docker VERSION=${TRAVIS_TAG}
-
-      
+env:
+  matrix:
+  - secure: ilGH9/1NuMtEoNXdEAVLWYafvMXGcC7SkTd0GXlBANeaEF/kLjIIgMOFXIH7uCAvow4u7ead0CcAe/QMP49yE/cakbUzy5+FpIY5Z+fTqwryffeLZluUSSD/vt2reT4tnKA6tfdwruQdpVFt+LZt8QxY0Uaiw3rIIJR2Pzfdi4788QzME4EQkRNlGwyYf/YPXQAEdcR/4cTmbFVdsMwpokmp8EDJ5T2tBJxo7T+w9fZILieAPZCcZD9SBzwmHIndJMOIhqtqwEjXqqXIE8osPntZkOPnBuy1RXJWz73YsXX9QDPK8TnLNJ+KA3BojXia4NgiYXjAUgliKJpg+JvAd0EH8K9ZHbsUBJIJt4YB9uYjK8u8fsqwh16mtGrMuSzoyt6PBcZqkBdgUg8NdQ5GFRn8DER/K+49Okd6BvSdnFmGJvAQUKjbkbRUOnFFvvwsbmwoxYDK3f3m9jB7y8YMKsYQNvzT3MP3AS+EHsNoyMtGrIsejIaLgUH1KAKBJzKgsURpUsQE2oaIyzCpNI1CnSCY20nNhBq0/LJ80jHHKevc0JnEmefnUn235KJoSbi80Vh1DCpk4yXmlSG5hNkSPWfXr9CBrZ04II6oaHJwg2RXaHbuk/YFctVlfaUHr9w/Pm8mGgBkoym1WwYrX1XMaQCqbGGysq3eys74Olrcba4=
+  - secure: Tc4cDIwNLkpDkAPhZuoGsdmzzvXTy1CAgJbOVGn9MjH+YmjSDXsT/A7tVgPI3OkJWg025ZmJmyoMFnZzIuGJ8A9IxH7rD6Owkah8HIBFuQkEMC1sy2l/xfdteh495DBJLpF10Pnp1QRaItvfuIWXh0Y3SQZ8C1tRAylxip6ftn0ZbJoXCpv0ZyKtG2NEWLTvr45F1K4ZecyKkc5/cB6bB7VMEP5FsMjMFLjHwqsiiEodmoL9LtKVuCoJKjcsMyhwzbwDAJP/PxE4SEQnVSJDZGRBp6LV6qN5Sr3+6SouTRsuqk4Mz/toKa1FOCfKlc4vdOciG/i0Yo9MYOjbCNTzH+H9UBrIhF0sDEcxUaSlJX1LbNhl1k1/lqa9NNzKYJUf1MrN+b+2wO08EMIy6h5QxxXy5f+PKuHHyti7A6h5d8lIH20q5ukkZ87u1YC3CiaWf/kxeuvYfa9/mgceFQhPpJhXHWS7U7Pbr1VjGHkEJNuLTfPBEVxG7CQZIjtkRxbnG9Isk5xV8nZ//h2Vjx2QOCVRmXw1HyAi7u9N3thBPMxqvpqIdblp2lKvjj5isC1kd8l2z7KDwtuGOfaYrRW/2PcSJORycMGB9QmqDHI9D2Wsyr7nGmo9wa66idCl6uJfnntjgzWeGHeMHFr90XpH1p4EBPTxa9ljNsDLzt+hI1o=
