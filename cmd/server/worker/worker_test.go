@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -63,4 +64,77 @@ func TestRunning(t *testing.T) {
 		t.Error(err)
 		return
 	}
+}
+
+func TestWorkerRun(t *testing.T) {
+	date := time.Now()
+	stack := pluginregistry.ContainerGroup{
+		Container: []pluginregistry.Container{
+			pluginregistry.Container{
+				ID:        "foobar1",
+				Hostname:  "fooServer1",
+				Image:     "foo1",
+				ImageID:   "bar1",
+				Name:      "c1",
+				Timestamp: date,
+			},
+			pluginregistry.Container{
+				ID:        "foobar2",
+				Hostname:  "fooServer2",
+				Image:     "foo2",
+				ImageID:   "bar2",
+				Name:      "c2",
+				Timestamp: date,
+			},
+			pluginregistry.Container{
+				ID:        "foobar3",
+				Hostname:  "fooServer3",
+				Image:     "foo1",
+				ImageID:   "bar1",
+				Name:      "c3",
+				Timestamp: date,
+			},
+		},
+	}
+
+	env := Environment{
+		RunningImages: &image.Active{},
+	}
+	var wg sync.WaitGroup
+	stackW := env.InitCGroupWorker(stack)
+
+	now := time.Now()
+
+	stackW.Run(&wg, func(env Environment, container pluginregistry.Container) error {
+		time.Sleep(1 * time.Second)
+		t.Log("1 fertig")
+		return nil
+	})
+
+	test1 := time.Since(now)
+
+	stackW.Run(&wg, func(env Environment, container pluginregistry.Container) error {
+		time.Sleep(1 * time.Second)
+		t.Log("2 fertig")
+		return nil
+	})
+
+	stackW.Run(&wg, func(env Environment, container pluginregistry.Container) error {
+		time.Sleep(1 * time.Second)
+		t.Log("3 fertig")
+		return nil
+	})
+
+	test2 := time.Since(now)
+
+	wg.Wait()
+
+	test3 := time.Since(now)
+
+	t.Log(test1)
+	t.Log(test2)
+	t.Log(test3)
+
+	t.Fail()
+
 }

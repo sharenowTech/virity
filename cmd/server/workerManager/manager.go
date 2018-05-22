@@ -14,7 +14,8 @@ const errRetries = 5
 
 // Manager contains all available agents, creates workers and assigns tasks
 type Manager struct {
-	agents sync.Map
+	agents        sync.Map
+	WorkerThreads int
 }
 
 // Plugins is a wrapper for worker plugins
@@ -31,7 +32,9 @@ type agent struct {
 	active         bool
 }
 
-var defManager = &Manager{}
+var defManager = &Manager{
+	WorkerThreads: 1,
+}
 
 // Delete agent from Scheduler
 func (man *Manager) delete(key string) {
@@ -93,9 +96,6 @@ func Run(p Plugins, cycleID int) {
 
 // Run creates and manages new workers.
 func (man *Manager) Run(p Plugins, cycleID int) {
-	var wg sync.WaitGroup
-
-	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
 	running := pluginregistry.ContainerGroup{}
 	analyse := pluginregistry.ContainerGroup{}
 
@@ -119,6 +119,7 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			then := time.Unix(val.latestCGroupID, 0)
 			duration := time.Since(then)
 
+			// if agent is inactive
 			if duration > val.data.Lifetime {
 				val.active = false
 				man.agents.Store(key, val)
@@ -126,12 +127,11 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			}
 		}
 
-		// If nothing has changed during last fetch
-		if val.latestCGroupID == cGroup.ID {
-			running.Container = append(running.Container, cGroup.Container...)
-		} else {
+		// If something has changed during last fetch, analyze these images
+		if val.latestCGroupID != cGroup.ID {
 			analyse.Container = append(analyse.Container, cGroup.Container...)
 		}
+		running.Container = append(running.Container, cGroup.Container...)
 
 		val.lastCheck = time.Now()
 		val.latestCGroupID = cGroup.ID
@@ -140,6 +140,23 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 		return true
 	})
 
+	// Define number of worker threads (each slice gets its own worker which run concurrently)
+	runningSlices := splitCGroup(&running, man.WorkerThreads)
+	analyseSlices := splitCGroup(&analyse, man.WorkerThreads)
+
+	var wg sync.WaitGroup
+	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
+
+	for _, group := range runningSlices {
+		cWorker := env.InitCGroupWorker(group)
+		cWorker.Run(&wg, cWorker.F.Running)
+	}
+	wg.Wait()
+
+	for _, group := range analyseSlices {
+		cWorker := env.InitCGroupWorker(group)
+		cWorker.Run(&wg, cWorker.F.Analyse)
+	}
 	wg.Wait()
 
 	mWorker := env.InitMaintainWorker()
