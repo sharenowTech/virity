@@ -57,8 +57,8 @@ func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.S
 }
 
 // Container creates a Subtask of a Basetask to handle containers
-func (b BaseTask) Container(data pluginregistry.Container, f ...func(Container) error) Container {
-	return Container{
+func (b BaseTask) Container(data pluginregistry.Container, f ...func(container) error) container {
+	return container{
 		Base:      b,
 		Container: data,
 		Process:   f,
