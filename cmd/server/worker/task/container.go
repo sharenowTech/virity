@@ -6,15 +6,15 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-// Container is a task for a container
-type Container struct {
+// container is a task for a container
+type container struct {
 	Base      BaseTask
 	Container pluginregistry.Container
-	Process   []func(Container) error
+	Process   []func(container) error
 }
 
 // Analyse analyses scans container and sends report to monitor
-func Analyse(c Container) error {
+func Analyse(c container) error {
 	log.Debug(log.Fields{
 		"package":  "worker",
 		"function": "Analyse",
@@ -32,7 +32,7 @@ func Analyse(c Container) error {
 }
 
 // Running adds container to running list but does not analyse them
-func Running(c Container) error {
+func Running(c container) error {
 	log.Debug(log.Fields{
 		"package":  "worker",
 		"function": "Running",
@@ -45,7 +45,7 @@ func Running(c Container) error {
 }
 
 // Run worker function as go func
-func (c Container) Run() error {
+func (c container) Run() error {
 	for _, proc := range c.Process {
 		err := proc(c)
 		if err != nil {
@@ -55,19 +55,31 @@ func (c Container) Run() error {
 	return nil
 }
 
-func (c *Container) Retry() {
-	if c.Base.Retries > 0 {
+// Retry adds the task to the queue until the counter is 0
+func (c *container) Retry() {
+	if c.Base.Retries <= 0 {
+		log.Warn(log.Fields{
+			"package":  "worker",
+			"function": "Container/Retry",
+		}, "Task failed after several retries. It will be dropped")
+		c.Base.wg.Done()
 		return
 	}
+	log.Info(log.Fields{
+		"package":  "worker",
+		"function": "Container/Retry",
+	}, "Task failed. I will retry.")
 	c.Base.Retries--
-	AddToQueue(c)
+	Queue <- c
 	return
 }
 
-func (c *Container) Register() {
+// Register adds Task to a WaitGroup
+func (c *container) Register() {
 	c.Base.wg.Add(1)
 }
 
-func (c *Container) DeRegister() {
+// DeRegister sets the Task in the WaitGroup to Done
+func (c *container) DeRegister() {
 	c.Base.wg.Done()
 }

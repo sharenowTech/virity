@@ -81,14 +81,8 @@ func Restore(p Plugins, cycleID int) error {
 func (man *Manager) Restore(p Plugins, cycleID int) error {
 	var wg sync.WaitGroup
 
-	baseTask := task.BaseTask{
-		Store:   p.Store,
-		Scanner: p.Scanner,
-		Monitor: p.Monitor,
-		Retries: 0,
-		CycleID: cycleID,
-	}
-	t := task.NewMaintain(baseTask, &wg, task.Restore)
+	template := task.New(&wg, cycleID, 0, p.Store, p.Scanner, p.Monitor)
+	t := template.Maintain(task.Restore)
 	task.AddToQueue(&t)
 
 	wg.Wait()
@@ -155,40 +149,28 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 	log.Debug(log.Fields{
 		"package":  "main/workerManager",
 		"function": "Run",
-		"count":    len(running.Container) + len(analyse.Container),
+		"count":    len(running.Container),
 	}, "Fetched Containers")
 
 	var wg sync.WaitGroup
 
-	baseTask := task.BaseTask{
-		Store:   p.Store,
-		Scanner: p.Scanner,
-		Monitor: p.Monitor,
-		Retries: 5,
-		CycleID: cycleID,
-	}
-
-	fmt.Println("WWWWWWWWWWWWWW")
+	template := task.New(&wg, cycleID, 5, p.Store, p.Scanner, p.Monitor)
 
 	for _, container := range running.Container {
-		t := task.NewContainer(baseTask, &wg, container, task.Running)
+		t := template.Container(container, task.Running)
 		task.AddToQueue(&t)
 	}
 
-	fmt.Println("OOOOOOOOOOOOOOO")
-
 	for _, container := range analyse.Container {
-		t := task.NewContainer(baseTask, &wg, container, task.Analyse)
+		t := template.Container(container, task.Analyse)
 		task.AddToQueue(&t)
 	}
 
 	wg.Wait()
 
-	fmt.Println("AAAAAAAAAAA")
+	template.Retries = 0
 
-	baseTask.Retries = 0
-
-	t := task.NewMaintain(baseTask, &wg, task.Resolve, task.Backup)
+	t := template.Maintain(task.Resolve, task.Backup)
 	task.AddToQueue(&t)
 
 	return

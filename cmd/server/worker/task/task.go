@@ -7,11 +7,10 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-// Queue represents the task queue for the workers
+// Queue is the task queue for the workers
 var Queue chan Task
 
-type Func struct{}
-
+// BaseTask is a template for specific tasks. Every Task has a base task. All subtasks share the same waitgroup and RunningImages list.
 type BaseTask struct {
 	RunningImages *image.Active
 	Store         pluginregistry.Store
@@ -22,10 +21,15 @@ type BaseTask struct {
 	wg            *sync.WaitGroup
 }
 
+// Task specifies all functions, a task has to implement
 type Task interface {
+	// Run is called when a task is executed
 	Run() error
+	// Retry is called to add a failed task again to the queue to retry
 	Retry()
+	// Adds the task to the WaitGroup
 	Register()
+	// Sets the task to Done in the WaitGroup
 	DeRegister()
 }
 
@@ -33,23 +37,38 @@ func init() {
 	Queue = make(chan Task)
 }
 
+// AddToQueue adds a new Task to the TaskQueue and adds it to the WaitGroup
 func AddToQueue(t Task) {
+	t.Register()
 	Queue <- t
 }
 
-func NewContainer(base BaseTask, wg *sync.WaitGroup, container pluginregistry.Container, f ...func(Container) error) Container {
-	base.wg = wg
+// New creates a new Basetask.
+func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor pluginregistry.Monitor) BaseTask {
+	return BaseTask{
+		RunningImages: &image.Active{},
+		wg:            wg,
+		Store:         store,
+		Scanner:       scanner,
+		Monitor:       monitor,
+		CycleID:       cycleID,
+		Retries:       maxRetries,
+	}
+}
+
+// Container creates a Subtask of a Basetask to handle containers
+func (b BaseTask) Container(data pluginregistry.Container, f ...func(Container) error) Container {
 	return Container{
-		Base:      base,
-		Container: container,
+		Base:      b,
+		Container: data,
 		Process:   f,
 	}
 }
 
-func NewMaintain(base BaseTask, wg *sync.WaitGroup, f ...func(Maintain) error) Maintain {
-	base.wg = wg
-	return Maintain{
-		Base:    base,
+// Maintain creates a Subtask of a Basetask to maintain the environment (data store etc.)
+func (b BaseTask) Maintain(f ...func(maintain) error) maintain {
+	return maintain{
+		Base:    b,
 		Process: f,
 	}
 }

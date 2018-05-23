@@ -12,6 +12,7 @@ type worker struct {
 	quit        chan bool
 }
 
+// newWorker creates a new worker
 func newWorker(workerPool chan chan task.Task) worker {
 	return worker{
 		WorkerPool:  workerPool,
@@ -30,16 +31,17 @@ func (w worker) Start() {
 
 			select {
 			case t := <-w.TaskChannel:
-				log.Debug(log.Fields{
-					"package":  "worker",
-					"function": "Start",
-				}, "Run task")
 				// we have received a work request.
 				err := t.Run()
 				if err != nil {
+					log.Debug(log.Fields{
+						"package":  "worker",
+						"function": "Start",
+						"Error":    err.Error(),
+					}, "Task failed. I will ask for a retry.")
 					t.Retry()
+					continue
 				}
-
 				t.DeRegister()
 
 			case <-w.quit:

@@ -5,17 +5,20 @@ import (
 	"github.com/car2go/virity/internal/log"
 )
 
+// Dispatcher holds workers and the WorkerPool to assign tasks
 type Dispatcher struct {
 	// A pool of workers channels that are registered with the dispatcher
 	WorkerPool chan chan task.Task
 	maxWorkers int
 }
 
+// NewDispatcher creates new Dispatcher
 func NewDispatcher(maxWorkers int) *Dispatcher {
 	pool := make(chan chan task.Task, maxWorkers)
 	return &Dispatcher{WorkerPool: pool, maxWorkers: maxWorkers}
 }
 
+// Run the Dispatcher
 func (d *Dispatcher) Run() {
 	// starting n number of workers
 	for i := 0; i < d.maxWorkers; i++ {
@@ -39,7 +42,6 @@ func (d *Dispatcher) dispatch() {
 				"function": "Dispatcher/dispatch",
 			}, "Task request received")
 			// a task request has been received
-			t.Register()
 			go func(task task.Task) {
 				// try to obtain a worker task channel that is available.
 				// this will block until a worker is idle
