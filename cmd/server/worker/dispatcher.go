@@ -1,35 +1,19 @@
 package worker
 
 import (
-	"github.com/car2go/virity/cmd/server/image"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/car2go/virity/cmd/server/worker/task"
+	"github.com/car2go/virity/internal/log"
 )
-
-// Queue represents the task queue for the workers
-var Queue chan Task
-
-type Task interface {
-	Work()
-}
-
-type Environment struct {
-	RunningImages *image.Active
-	Store         pluginregistry.Store
-	Scanner       pluginregistry.Scan
-	Monitor       pluginregistry.Monitor
-	ErrorRetries  int
-	CycleID       int
-}
 
 type Dispatcher struct {
 	// A pool of workers channels that are registered with the dispatcher
-	WorkerPool chan chan Task
+	WorkerPool chan chan task.Task
 	maxWorkers int
 }
 
 func NewDispatcher(maxWorkers int) *Dispatcher {
-	pool := make(chan chan Task, maxWorkers)
-	return &Dispatcher{WorkerPool: pool}
+	pool := make(chan chan task.Task, maxWorkers)
+	return &Dispatcher{WorkerPool: pool, maxWorkers: maxWorkers}
 }
 
 func (d *Dispatcher) Run() {
@@ -37,6 +21,10 @@ func (d *Dispatcher) Run() {
 	for i := 0; i < d.maxWorkers; i++ {
 		worker := newWorker(d.WorkerPool)
 		worker.Start()
+		log.Debug(log.Fields{
+			"package":  "worker",
+			"function": "Dispatcher/Run",
+		}, "Worker created")
 	}
 
 	go d.dispatch()
@@ -45,16 +33,21 @@ func (d *Dispatcher) Run() {
 func (d *Dispatcher) dispatch() {
 	for {
 		select {
-		case task := <-Queue:
+		case t := <-task.Queue:
+			log.Debug(log.Fields{
+				"package":  "worker",
+				"function": "Dispatcher/dispatch",
+			}, "Task request received")
 			// a task request has been received
-			go func(task Task) {
+			t.Register()
+			go func(task task.Task) {
 				// try to obtain a worker task channel that is available.
 				// this will block until a worker is idle
 				taskChannel := <-d.WorkerPool
 
 				// dispatch the task to the worker task channel
 				taskChannel <- task
-			}(task)
+			}(t)
 		}
 	}
 }

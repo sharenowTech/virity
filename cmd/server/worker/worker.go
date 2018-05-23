@@ -1,21 +1,21 @@
 package worker
 
 import (
-	"github.com/car2go/virity/cmd/server/image"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/car2go/virity/cmd/server/worker/task"
+	"github.com/car2go/virity/internal/log"
 )
 
 // Worker represents the worker that executes the job
 type worker struct {
-	WorkerPool  chan chan Task
-	TaskChannel chan Task
+	WorkerPool  chan chan task.Task
+	TaskChannel chan task.Task
 	quit        chan bool
 }
 
-func newWorker(workerPool chan chan Task) worker {
+func newWorker(workerPool chan chan task.Task) worker {
 	return worker{
 		WorkerPool:  workerPool,
-		TaskChannel: make(chan Task),
+		TaskChannel: make(chan task.Task),
 		quit:        make(chan bool),
 	}
 }
@@ -29,9 +29,18 @@ func (w worker) Start() {
 			w.WorkerPool <- w.TaskChannel
 
 			select {
-			case task := <-w.TaskChannel:
+			case t := <-w.TaskChannel:
+				log.Debug(log.Fields{
+					"package":  "worker",
+					"function": "Start",
+				}, "Run task")
 				// we have received a work request.
-				task.Work()
+				err := t.Run()
+				if err != nil {
+					t.Retry()
+				}
+
+				t.DeRegister()
 
 			case <-w.quit:
 				// we have received a signal to stop
@@ -46,16 +55,4 @@ func (w worker) Stop() {
 	go func() {
 		w.quit <- true
 	}()
-}
-
-// Init creates a new Environment and initializes everything
-func Init(cycle int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor pluginregistry.Monitor) Environment {
-	return Environment{
-		RunningImages: &image.Active{},
-		Store:         store,
-		Scanner:       scanner,
-		Monitor:       monitor,
-		ErrorRetries:  5,
-		CycleID:       cycle,
-	}
 }

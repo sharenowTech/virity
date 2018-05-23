@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/car2go/virity/cmd/server/worker"
+	"github.com/car2go/virity/cmd/server/worker/task"
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
@@ -14,8 +15,8 @@ const errRetries = 5
 
 // Manager contains all available agents, creates workers and assigns tasks
 type Manager struct {
-	agents        sync.Map
-	WorkerThreads int
+	agents     sync.Map
+	dispatcher *worker.Dispatcher
 }
 
 // Plugins is a wrapper for worker plugins
@@ -32,8 +33,11 @@ type agent struct {
 	active         bool
 }
 
-var defManager = &Manager{
-	WorkerThreads: 1,
+var defManager = &Manager{}
+
+func init() {
+	defManager.dispatcher = worker.NewDispatcher(1)
+	defManager.dispatcher.Run()
 }
 
 // Delete agent from Scheduler
@@ -75,17 +79,25 @@ func Restore(p Plugins, cycleID int) error {
 
 // Restore restores data from the store. It should be called only on first run
 func (man *Manager) Restore(p Plugins, cycleID int) error {
-	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
+	var wg sync.WaitGroup
 
-	worker := env.InitMaintainWorker()
-	err := worker.F.Restore(env)
-	if err != nil {
-		return err
+	baseTask := task.BaseTask{
+		Store:   p.Store,
+		Scanner: p.Scanner,
+		Monitor: p.Monitor,
+		Retries: 0,
+		CycleID: cycleID,
 	}
+	t := task.NewMaintain(baseTask, &wg, task.Restore)
+	task.AddToQueue(&t)
+
+	wg.Wait()
+
 	log.Info(log.Fields{
 		"package":  "main/workerManager",
 		"function": "Restore",
 	}, "Restored Monitored Data")
+
 	return nil
 }
 
@@ -140,52 +152,46 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 		return true
 	})
 
-	// Define number of worker threads (each slice gets its own worker which run concurrently)
-	runningSlices := splitCGroup(&running, man.WorkerThreads)
-	analyseSlices := splitCGroup(&analyse, man.WorkerThreads)
+	log.Debug(log.Fields{
+		"package":  "main/workerManager",
+		"function": "Run",
+		"count":    len(running.Container) + len(analyse.Container),
+	}, "Fetched Containers")
 
 	var wg sync.WaitGroup
-	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
 
-	for _, group := range runningSlices {
-		cWorker := env.InitCGroupWorker(group)
-		cWorker.Run(&wg, cWorker.F.Running)
+	baseTask := task.BaseTask{
+		Store:   p.Store,
+		Scanner: p.Scanner,
+		Monitor: p.Monitor,
+		Retries: 5,
+		CycleID: cycleID,
 	}
+
+	fmt.Println("WWWWWWWWWWWWWW")
+
+	for _, container := range running.Container {
+		t := task.NewContainer(baseTask, &wg, container, task.Running)
+		task.AddToQueue(&t)
+	}
+
+	fmt.Println("OOOOOOOOOOOOOOO")
+
+	for _, container := range analyse.Container {
+		t := task.NewContainer(baseTask, &wg, container, task.Analyse)
+		task.AddToQueue(&t)
+	}
+
 	wg.Wait()
 
-	for _, group := range analyseSlices {
-		cWorker := env.InitCGroupWorker(group)
-		cWorker.Run(&wg, cWorker.F.Analyse)
-	}
-	wg.Wait()
+	fmt.Println("AAAAAAAAAAA")
 
-	mWorker := env.InitMaintainWorker()
-	mWorker.Run(&wg, mWorker.F.Resolve, mWorker.F.Backup)
+	baseTask.Retries = 0
+
+	t := task.NewMaintain(baseTask, &wg, task.Resolve, task.Backup)
+	task.AddToQueue(&t)
+
 	return
-}
-
-// splitCGroup splits a single CGroup into n Cgroups
-// n is the number of CGroups
-func splitCGroup(group *pluginregistry.ContainerGroup, n int) []pluginregistry.ContainerGroup {
-	if n > len(group.Container) {
-		n = len(group.Container)
-	}
-	if n < 1 {
-		n = 1
-	}
-	elements := (len(group.Container) + n - 1) / n
-	slices := make([]pluginregistry.ContainerGroup, n)
-
-	for index := range slices {
-		start := index * elements
-		end := start + elements
-		if end > len(group.Container) {
-			end = len(group.Container)
-		}
-		slices[index].Container = group.Container[start:end]
-	}
-
-	return slices
 }
 
 // CleanUp store and manager data
