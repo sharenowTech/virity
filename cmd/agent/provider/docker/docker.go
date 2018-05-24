@@ -28,6 +28,9 @@ func (p Provider) GetRunningContainers() ([]provider.Container, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	cli.Close()
+
 	list := make([]provider.Container, 0)
 
 	for _, container := range containers {
@@ -62,6 +65,7 @@ func (p Provider) GetHostInfo() (provider.HostInfo, error) {
 	if err != nil {
 		return provider.HostInfo{}, err
 	}
+	cli.Close()
 
 	return provider.HostInfo{
 		UUID:     info.ID,
