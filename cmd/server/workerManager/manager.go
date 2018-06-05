@@ -11,6 +11,7 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
+const workers = 10
 const errRetries = 5
 
 // Manager contains all available agents, creates workers and assigns tasks
@@ -36,7 +37,7 @@ type agent struct {
 var defManager = &Manager{}
 
 func init() {
-	defManager.dispatcher = worker.NewDispatcher(1)
+	defManager.dispatcher = worker.NewDispatcher(workers)
 	defManager.dispatcher.Run()
 }
 
