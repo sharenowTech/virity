@@ -65,14 +65,14 @@ func scheduled() error {
 
 	if cycle == 1 {
 		err = workerManager.Restore(p, cycle)
-	}
-	if err != nil {
-		log.Error(log.Fields{
-			"package":  "main",
-			"function": "scheduled",
-			"error":    err.Error(),
-		}, "An error occurred while restoring data")
-		//continue with clean new structure
+		if err != nil {
+			log.Error(log.Fields{
+				"package":  "main",
+				"function": "scheduled",
+				"error":    err.Error(),
+			}, "An error occurred while restoring data")
+			//continue with clean new structure
+		}
 	}
 
 	err = workerManager.Refresh(p.Store)
