@@ -5,7 +5,7 @@
 
 ![Virity-Logo](docs/logo.svg)
 
-Virity is a tool, built for making vulnerabilities of Docker containers visible. It connects monitoring tools like sensu or elasticseach with container scanning tools like clair or anchore. Virity is based on an Agent-Server architecture. The Virity-Agent runs on every Docker host or a Kubernetes cluster and fetches constantly all currently running containers. The Virity Server uses this information and automatically pushes the images, used in the containers, to the configurated scan engine. The scanning results are filtered by severity and then pushed to the chosen monitoring system.
+Virity is a tool which is built for making vulnerabilities of Docker containers visible. It connects monitoring tools like sensu or elasticseach with container scanning tools like clair or anchore. Virity is based on an Agent-Server architecture. The Virity-Agent runs on every Docker host or a Kubernetes cluster and fetches constantly all currently running containers. The Virity Server uses this information and automatically pushes the images, used in the containers, to the configurated scan engine. The scanning results are filtered by severity and then pushed to the chosen monitoring system.
 
 ![Virity-Overview](docs/architecture.svg)
 

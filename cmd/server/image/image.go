@@ -34,7 +34,7 @@ const (
 
 const backupPath = "Backup/Monitored"
 
-// ImageStatus containers the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
+// ImageStatus contains the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
 type imageStatus struct {
 	image          image
 	state          status
@@ -263,7 +263,6 @@ func Resolve(active *Active, cycleID int, monitor pluginregistry.Monitor, store 
 // Resolve compares monitored and active image maps and resolves differences
 func (m *Monitored) Resolve(active *Active, cycleID int, monitor pluginregistry.Monitor, store pluginregistry.Store) error {
 	resolvable := m.compare(&active.images, cycleID)
-
 	for _, elem := range resolvable {
 		switch elem.action {
 		case update:
@@ -293,7 +292,7 @@ func (m *Monitored) Resolve(active *Active, cycleID int, monitor pluginregistry.
 	defMonitored.ResetActive()
 }*/
 
-// ResetActive resets the map of active containers
+// Reset resets the map of active containers
 func (a *Active) Reset() {
 	a.images = sync.Map{}
 }
@@ -322,7 +321,16 @@ func (m *Monitored) del(is imageStatus) {
 			"owner":    is.image.MetaData.OwnerID,
 		}, "Deleting Image from monitored list")
 		m.images.Delete(is.image.MetaData.ImageID)
+		return
 	}
+	log.Info(log.Fields{
+		"package":  "main/image",
+		"function": "del",
+		"image":    is.image.MetaData.Tag,
+		"id":       is.image.MetaData.ImageID,
+		"owner":    is.image.MetaData.OwnerID,
+		"state":    is.state,
+	}, "Image is not yet monitored. Therefore it cannot be deleted.")
 }
 
 // MonitoredAdd adds an image to the monitored map based on a provided container
@@ -367,10 +375,12 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 			if eq := reflect.DeepEqual(mon.MetaData.OwnerID, act.MetaData.OwnerID); !eq {
 				missingOwner := difference(mon.MetaData.OwnerID, act.MetaData.OwnerID)
 				mon.MetaData.OwnerID = missingOwner
-				different = append(different, imageStatus{
-					image:  mon,
-					action: partlyResolve,
-				})
+
+				value := v.(imageStatus)
+				value.image = mon
+				value.action = partlyResolve
+				different = append(different, value)
+
 				log.Info(log.Fields{
 					"package":  "main/image",
 					"function": "compare",
@@ -389,10 +399,11 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 			}
 
 			mon.Containers = act.Containers
-			different = append(different, imageStatus{
-				image:  mon,
-				action: update,
-			})
+			value := v.(imageStatus)
+			value.image = mon
+			value.action = update
+			different = append(different, value)
+
 			log.Info(log.Fields{
 				"package":  "main/image",
 				"function": "compare",
@@ -407,17 +418,15 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 		}
 
 		// fully resolve image
-		value := v.(imageStatus).image
-		different = append(different, imageStatus{
-			image:  value,
-			action: fullyResolve,
-		})
+		value := v.(imageStatus)
+		value.action = fullyResolve
+		different = append(different, value)
 		log.Info(log.Fields{
 			"package":  "main/image",
 			"function": "compare",
-			"image":    value.MetaData.Tag,
-			"id":       value.MetaData.ImageID,
-			"owner":    value.MetaData.OwnerID,
+			"image":    value.image.MetaData.Tag,
+			"id":       value.image.MetaData.ImageID,
+			"owner":    value.image.MetaData.OwnerID,
 			"state":    v.(imageStatus).state,
 			"action":   fullyResolve,
 		}, "Fully resolve Image")
