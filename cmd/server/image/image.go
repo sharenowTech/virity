@@ -170,6 +170,25 @@ func (m *Monitored) Backup(store pluginregistry.Store) error {
 	return nil
 }
 
+// Refresh sends all currently monitored images to the monitor.
+func Refresh(monitor pluginregistry.Monitor) error {
+	return defMonitored.Refresh(monitor)
+}
+
+// Refresh sends all currently monitored images to the monitor.
+func (m *Monitored) Refresh(monitor pluginregistry.Monitor) error {
+	var err error
+	m.images.Range(func(k, v interface{}) bool {
+		val := v.(imageStatus)
+		err = val.monitor(monitor)
+		return true
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Monitor sends the image data to a provided monitor plugin and update its state
 func Monitor(stack imageStatus, cycleID int, monitor pluginregistry.Monitor) error {
 	return defMonitored.Monitor(stack, cycleID, monitor)

@@ -47,6 +47,11 @@ func Restore(m maintain) error {
 	if err != nil {
 		return err
 	}
+	err = image.Refresh(m.Base.Monitor)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
