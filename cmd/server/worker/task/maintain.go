@@ -43,7 +43,7 @@ func Restore(m maintain) error {
 		"package":  "worker",
 		"function": "Restore",
 	}, "Run task")
-	err := image.Restore(m.Base.Store)
+	err := image.RestoreFrom(m.Base.Store)
 	if err != nil {
 		return err
 	}

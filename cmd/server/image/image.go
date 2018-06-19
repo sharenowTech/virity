@@ -113,13 +113,13 @@ func (a *Active) Add(container pluginregistry.Container) error {
 	return nil
 }
 
-// Restore all monitored images from store
-func Restore(store pluginregistry.Store) error {
-	return defMonitored.Restore(store)
+// RestoreFrom all monitored images from store
+func RestoreFrom(store pluginregistry.Store) error {
+	return defMonitored.RestoreFrom(store)
 }
 
-// Restore all monitored images from store
-func (m *Monitored) Restore(store pluginregistry.Store) error {
+// RestoreFrom all monitored images from store
+func (m *Monitored) RestoreFrom(store pluginregistry.Store) error {
 	stacks, err := store.LoadImageStacks(backupPath)
 	if err != nil {
 		return err
