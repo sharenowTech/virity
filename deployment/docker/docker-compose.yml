@@ -1,0 +1,73 @@
+version: '2'
+services:
+  anchore-engine:
+    image: docker.io/anchore/anchore-engine:latest
+    #privileged: true
+    depends_on:
+      - anchore-db
+    ports:
+      - "8228:8228"
+      - "8338:8338"
+     #- /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # NOTE: this should be set to the same name as this service (e.g. anchore-engine)
+      - ANCHORE_HOST_ID=anchore-engine
+    volumes:
+      - ./anchore_config.yml:/config/config.yaml:Z
+  anchore-db:
+    image: postgres:10
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+      - PGDATA=/opt/anchore-data
+    volumes:
+      - anchore-data:/opt/anchore-data
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.3
+    command: 
+      - "/usr/local/bin/etcd"
+      - "--advertise-client-urls=http://0.0.0.0:2379"
+      - "--listen-client-urls=http://0.0.0.0:2379"
+    ports:
+      - "2379:2379"
+  
+  sensu-server:
+    image: hiroakis/docker-sensu-server
+    ports:
+      - "10022:22"
+      - "3000:3000"
+      - "4567:4567"
+      - "5671:5671"
+      - "15672:15672"
+
+  sensu-client:
+    image: kaitsh/sensu-client-testing
+    network_mode: host
+    volumes:
+      - /dev:/dev/host_dev/:ro  
+      - /proc:/host_proc/:ro
+      - /sys:/host_sys/:ro
+    depends_on:
+      - sensu-server
+    ports:
+      - "3031:3031"
+      - "3030:3030"
+
+  virity-agent:
+    image: car2godeveloper/virity-agent:test
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    hostname: demo-host
+    environment:
+      - VIRITY_STORE_INTERVAL_AGENTPUSH=1m
+      - VIRITY_STORE_ENDPOINT=http://192.168.99.100:2379
+  
+  virity-server:
+    image: car2godeveloper/virity-server:test
+    network_mode: host
+    environment:
+      - VIRITY_STORE_INTERVAL_SERVERPOLL=30s
+
+
+volumes:
+  anchore-data:
