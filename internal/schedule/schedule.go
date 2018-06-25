@@ -16,6 +16,8 @@ func Schedule(toDo func() error, interval time.Duration, name string) chan bool 
 			"package":  "schedule",
 			"event":    name,
 		}, "Starting Scheduler")
+		// Execute once before waiting for ticks
+		go toDo()
 		for {
 			select {
 			case <-ticker.C:
