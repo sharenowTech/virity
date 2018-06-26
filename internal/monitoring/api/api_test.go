@@ -3,15 +3,13 @@ package api
 import (
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
 func TestNew(T *testing.T) {
 	New(pluginregistry.Config{})
-	time.Sleep(2 * time.Hour)
-	request, err := http.NewRequest("GET", "http://localhost:8080/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8080/api/", nil)
 	if err != nil {
 		T.Error(err)
 		return

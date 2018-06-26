@@ -15,6 +15,13 @@ type api struct {
 	server *http.Server
 }
 
+type image struct {
+	Tag        string               `json:"tag"`
+	Containers []string             `json:"in_containers"`
+	CVEs       []pluginregistry.CVE `json:"vulnerability_cve"`
+	Owner      string               `json:"owner"`
+}
+
 func init() {
 	// register New function at pluginregistry
 	_, err := pluginregistry.RegisterMonitor("internal", New)
