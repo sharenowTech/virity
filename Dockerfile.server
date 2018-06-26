@@ -1,9 +1,10 @@
 FROM golang:alpine as build
 ARG VERSION=latest
-RUN apk add --update git
+RUN apk add --update git nodejs nodejs-npm
 WORKDIR /go/src/github.com/car2go/virity
 COPY .    .
 RUN go get -v -d ./...
+RUN npm run build --prefix internal/monitoring/api/client
 RUN CGO_ENABLED=0 GOOS=linux go build -v -ldflags "-X main.version=$VERSION" -a -installsuffix cgo -o virity-server-v$VERSION ./cmd/server
 
 FROM scratch
@@ -14,7 +15,10 @@ COPY --from=build /go/src/github.com/car2go/virity/docker_internal/passwd /etc/p
 USER nobody
 COPY --from=build /go/src/github.com/car2go/virity/virity-server-v$VERSION /cmd/server
 COPY --from=build /go/src/github.com/car2go/virity/config.yml /cmd/config.yml
+COPY --from=build /go/src/github.com/car2go/virity/internal/monitoring/api/client/dist /cmd/internal/monitoring/api/client/dist
 
 WORKDIR /cmd
+
+EXPOSE 8080
 
 CMD [ "./server" ]
