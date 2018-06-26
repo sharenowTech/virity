@@ -26,6 +26,7 @@
       <li><a href="https://vue-loader.vuejs.org" target="_blank">vue-loader</a></li>
       <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
     </ul>
+    <p>My Test {{ text }}</p>
   </div>
 </template>
 
@@ -34,6 +35,14 @@ export default {
   name: 'HelloWorld',
   props: {
     msg: String
+  },
+  computed: {
+    text () {
+      return this.$store.state.images.images
+    },
+  },
+  mounted() {
+    this.$store.dispatch('getImages')
   }
 }
 </script>

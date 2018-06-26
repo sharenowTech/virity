@@ -6,6 +6,7 @@ import (
 	"github.com/car2go/virity/cmd/server/workerManager"
 	"github.com/car2go/virity/internal/config"
 	"github.com/car2go/virity/internal/log"
+	_ "github.com/car2go/virity/internal/monitoring/api"
 	_ "github.com/car2go/virity/internal/monitoring/sensu"
 	_ "github.com/car2go/virity/internal/scanner/anchore"
 	"github.com/car2go/virity/internal/schedule"

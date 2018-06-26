@@ -54,6 +54,8 @@ $(CMDs): dep webclient
 
 webclient: 
 	npm run build --prefix internal/monitoring/api/client
+	mkdir -p build
+	cp -r internal/monitoring/api/client/dist build/static
 
 .PHONY: bin
 bin: $(CMDs)
