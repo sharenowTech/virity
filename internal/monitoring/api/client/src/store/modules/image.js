@@ -1,12 +1,13 @@
-import api from '@/api'
+//import api from '@/api'
+import api from '@/api/local'
 
 const defaultState = {
     images: "asd",
 };
 
 const actions = {
-    getImages: (context) => {
-        api.getImages()
+    fetchImages: (context) => {
+        api.fetchImages()
             .then((response) => context.commit('IMAGES_UPDATED', response))
             .catch((error) => console.error(error))
     }

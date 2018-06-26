@@ -42,7 +42,7 @@ export default {
     },
   },
   mounted() {
-    this.$store.dispatch('getImages')
+    this.$store.dispatch('fetchImages')
   }
 }
 </script>

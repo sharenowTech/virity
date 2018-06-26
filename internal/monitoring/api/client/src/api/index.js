@@ -1,15 +1,12 @@
-//import Axios from 'axios';
+import Axios from 'axios';
 
-/*const getImages = () => {
-  return Axios.get('http://192.168.99.100:8080/api/')
+const fetchImages = () => {
+  return Axios.get('http://127.0.0.1/api')
     .then((response) => Promise.resolve(response.data))
     .catch((error) => Promise.reject(error));
-}*/
-
-const getImages = () => {
-  return Promise.resolve("Das ist ein Test");
 }
 
+
 export default {
-  getImages
+  fetchImages
 }
