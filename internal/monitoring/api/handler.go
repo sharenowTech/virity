@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func handler1(w http.ResponseWriter, req *http.Request) {
+func (api ApiService) images(w http.ResponseWriter, req *http.Request) {
 	// The "/" pattern matches everything, so we need to check
 	// that we're at the root here.
 	if req.URL.Path != "/api/" {

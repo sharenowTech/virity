@@ -7,19 +7,20 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-const static = "static"
-
-type api struct {
-	url    string
-	mux    *http.ServeMux
-	server *http.Server
+type ApiService struct {
+	Url     string
+	Mux     *http.ServeMux
+	Server  *http.Server
+	Statics *staticsServer
+	Model   Model
 }
 
-type image struct {
-	Tag        string               `json:"tag"`
-	Containers []string             `json:"in_containers"`
-	CVEs       []pluginregistry.CVE `json:"vulnerability_cve"`
-	Owner      string               `json:"owner"`
+type Model interface {
+	AddImage(image pluginregistry.ImageStack) error
+	DelImage(id string) error
+	GetImage(id string) ([]byte, error)
+	GetImageList() ([]byte, error)
+	GetVulnerabilityList() ([]byte, error)
 }
 
 func init() {
@@ -36,44 +37,44 @@ func init() {
 
 // New initializes the plugin
 func New(config pluginregistry.Config) pluginregistry.Monitor {
-	api := api{
-		url: config.Endpoint,
-		mux: http.NewServeMux(),
+	api := ApiService{
+		Url:     config.Endpoint,
+		Mux:     http.NewServeMux(),
+		Statics: newStaticsServer("static"),
+		Model:   ImageModel{},
 	}
 
-	api.server = &http.Server{
+	api.Server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.mux,
+		Handler: api.Mux,
 	}
 
-	api.runServer()
+	api.Serve()
 
 	return api
 }
 
-func (a api) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
-	panic("not implemented")
+func (api ApiService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
+	if status != pluginregistry.StatusOK {
+		err := api.Model.AddImage(image)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (a api) Resolve(image pluginregistry.ImageStack) error {
-	panic("not implemented")
+func (api ApiService) Resolve(image pluginregistry.ImageStack) error {
+	api.Model.DelImage(image.MetaData.ImageID)
+	return nil
 }
 
-func (api api) initRoutes() {
-	// serve static files
-	fs := http.FileServer(http.Dir(static))
-	api.mux.Handle("/", http.StripPrefix("/", fs))
-
-	// serve api
-	api.mux.HandleFunc("/api/", handler1)
+func (api ApiService) Serve() {
+	api.router()
+	go api.Server.ListenAndServe()
 }
 
-func (api api) runServer() {
-	api.initRoutes()
-	go api.server.ListenAndServe()
-}
-
-func (api api) restartServer() {
-	api.server.Close()
-	api.runServer()
+func (api ApiService) restartServer() {
+	api.Server.Close()
+	api.Serve()
 }
