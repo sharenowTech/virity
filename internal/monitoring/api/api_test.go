@@ -4,17 +4,19 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gorilla/mux"
+
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
 func TestNew(T *testing.T) {
-	api := apiService{
-		mux:     http.NewServeMux(),
-		statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
+	api := ApiService{
+		Mux:     mux.NewRouter(),
+		Statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
 	}
-	api.server = &http.Server{
+	api.Server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.mux,
+		Handler: api.Mux,
 	}
 
 	api.Serve()
@@ -37,13 +39,13 @@ func TestNew(T *testing.T) {
 
 }
 func TestPush(t *testing.T) {
-	api := apiService{
-		mux:     http.NewServeMux(),
-		statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
+	api := ApiService{
+		Mux:     mux.NewRouter(),
+		Statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
 	}
-	api.server = &http.Server{
+	api.Server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.mux,
+		Handler: api.Mux,
 	}
 
 	image := pluginregistry.ImageStack{
@@ -103,13 +105,13 @@ func TestPush(t *testing.T) {
 }
 
 func TestResolve(t *testing.T) {
-	api := apiService{
-		mux:     http.NewServeMux(),
-		statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
+	api := ApiService{
+		Mux:     mux.NewRouter(),
+		Statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
 	}
-	api.server = &http.Server{
+	api.Server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.mux,
+		Handler: api.Mux,
 	}
 
 	image := pluginregistry.ImageStack{

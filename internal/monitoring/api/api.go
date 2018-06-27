@@ -5,11 +5,12 @@ import (
 
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/gorilla/mux"
 )
 
 type ApiService struct {
 	Url     string
-	Mux     *http.ServeMux
+	Mux     *mux.Router
 	Server  *http.Server
 	Statics *staticsServer
 	Model   Model
@@ -39,7 +40,7 @@ func init() {
 func New(config pluginregistry.Config) pluginregistry.Monitor {
 	api := ApiService{
 		Url:     config.Endpoint,
-		Mux:     http.NewServeMux(),
+		Mux:     mux.NewRouter(),
 		Statics: newStaticsServer("static"),
 		Model:   ImageModel{},
 	}

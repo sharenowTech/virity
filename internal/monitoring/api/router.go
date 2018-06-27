@@ -4,5 +4,5 @@ func (api ApiService) router() {
 
 	// serve api
 	api.Mux.Handle("/", api.Statics)
-	api.Mux.HandleFunc("/api/", api.handler1)
+	api.Mux.HandleFunc("/image", api.ImageList)
 }
