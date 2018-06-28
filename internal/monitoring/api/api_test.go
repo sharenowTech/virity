@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 
@@ -169,8 +168,6 @@ func TestPush(t *testing.T) {
 	if response.StatusCode != 200 {
 		t.Errorf("Server not reachable. Code: %v", response.StatusCode)
 	}
-	time.Sleep(1 * time.Minute)
-	t.Fail()
 
 }
 
