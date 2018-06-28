@@ -21,7 +21,7 @@ scanner:
 
 
 monitor:
-  type: "sensu"
+  type: "internal"
   endpoint: "localhost:3030"
   username: ""
   password: ""
