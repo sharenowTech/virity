@@ -12,7 +12,7 @@ import (
 func TestNew(T *testing.T) {
 	api := ApiService{
 		Mux:     mux.NewRouter(),
-		Statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
+		Statics: newStaticsServer("client/dist"),
 	}
 	api.Server = &http.Server{
 		Addr:    ":8080",
@@ -174,7 +174,7 @@ func TestPush(t *testing.T) {
 func TestResolve(t *testing.T) {
 	api := ApiService{
 		Mux:     mux.NewRouter(),
-		Statics: newStaticsServer("/Users/dglinka/src/Go/src/github.com/car2go/virity/internal/monitoring/api/client/dist"),
+		Statics: newStaticsServer("client/dist"),
 	}
 	api.Server = &http.Server{
 		Addr:    ":8080",
