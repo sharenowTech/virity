@@ -42,7 +42,7 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 		Url:     config.Endpoint,
 		Mux:     mux.NewRouter(),
 		Statics: newStaticsServer("static"),
-		Model:   ImageModel{},
+		Model:   NewModel(),
 	}
 
 	api.Server = &http.Server{
