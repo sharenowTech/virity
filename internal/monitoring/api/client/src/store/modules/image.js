@@ -1,5 +1,5 @@
-//import api from '@/api'
-import api from '@/api/local'
+import api from '@/api'
+//import api from '@/api/local'
 
 const defaultState = {
     images: [],
@@ -24,6 +24,7 @@ const mutations = {
         state.images = images;
     },
     DETAILS_UPDATED: (state, image) => {
+        // Change to Map if supported
         state.detail = {
             [image.id]: image,
             ...state.detail

@@ -1,34 +1,51 @@
 <template>
   <div v-if="imageInfo === ''">
-    <div class="section is-medium container has-text-centered">
-      <span class="icon">
-        <i class="fas fa-spinner fa-pulse"></i>
-      </span>
-    </div>
+    <Loader />
   </div>
   <div v-else>
-    <h1 class="title">{{imageInfo.tag}}</h1>
-    <h2 class="subtitle">{{imageInfo.id}}</h2>
-    
-    <p :key="cve.Package" v-for="cve in imageInfo.vulnerability_cve">
-      {{cve.Vuln}}
-    </p>
-    <p :key="owner" v-for="owner in imageInfo.owner">
-      {{owner}}
-    </p>
-    <p :key="container.ID" v-for="container in imageInfo.in_containers">
-      {{container.ID}}
-    </p>
-
+    <section class="hero is-bold">
+      <div class="hero-body">
+        <div class="container">
+          <h1 class="title">
+            {{imageInfo.tag}}
+          </h1>
+          <h2 class="subtitle">
+            {{imageInfo.id}}
+          </h2>
+        </div>
+      </div>
+    </section>
+    <section class="columns">
+      <div class="column is-narrow" :key="container.ID" v-for="container in imageInfo.in_containers">
+        <Container v-bind="container" />
+      </div>
+    </section>
+    <div class="columns is-multiline">
+      <div class="column is-one-quarter-desktop is-half-tablet" :key="cve.Package" v-for="cve in orderedCVEs">
+        <Cve v-bind="cve" />
+      </div>
+    </div>
   </div>
 </template>
 <script>
+import CVE from '@/components/cve.vue'
+import Container from '@/components/container.vue'
+import Loader from '@/components/loader.vue'
 export default {
   name: 'cimage',
+  components: {
+    Cve: CVE,
+    Loader,
+    Container
+  },
   computed: {
     imageInfo () {
       return this.$store.state.images.detail[this.$route.params.id] ? this.$store.state.images.detail[this.$route.params.id] : ''
     },
+    orderedCVEs () {
+      let info = this.imageInfo
+      return info.vulnerability_cve.sort((a, b) => b.Severity-a.Severity);
+    }
   },
   mounted() {
     this.$store.dispatch({
@@ -38,10 +55,6 @@ export default {
   }
 }
 </script>
-<style scoped>
-
-.icon {
-  font-size: 5rem;
-}
+<style>
 
 </style>

@@ -12,6 +12,17 @@
   </div>
 </template>
 
-<style lang="sass" src="bulma">
+<style src="bulma"></style>
+<style>
+
+.icon.rounded {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+}
+
+.scroll {
+  overflow-y: scroll;
+  max-height: 80vh;
+}
 
 </style>

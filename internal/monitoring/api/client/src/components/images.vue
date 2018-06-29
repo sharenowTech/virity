@@ -41,19 +41,16 @@
 <script>
 export default {
   name: 'Images',
-  computed: {
-    list () {
-      return this.$store.state.images.images
-    },
+  props: {
+    list: {
+      type: Array,
+    }
   },
   methods: {
     link(target) {
-      window.location = '#/image/'+target;
+      window.open('#/image/'+target, '_self')
     }
   },
-  mounted() {
-    this.$store.dispatch('fetchImages')
-  }
 }
 </script>
 
