@@ -4,7 +4,7 @@ RUN apk add --update git nodejs nodejs-npm
 WORKDIR /go/src/github.com/car2go/virity
 COPY .    .
 RUN go get -v -d ./...
-RUN npm run build --prefix internal/monitoring/api/client
+RUN npm install --prefix internal/monitoring/api/client && npm run build --prefix internal/monitoring/api/client
 RUN CGO_ENABLED=0 GOOS=linux go build -v -ldflags "-X main.version=$VERSION" -a -installsuffix cgo -o virity-server-v$VERSION ./cmd/server
 
 FROM scratch
