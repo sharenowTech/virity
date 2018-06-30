@@ -57,6 +57,10 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 
 func (api ApiService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
 	if status != pluginregistry.StatusOK {
+		log.Debug(log.Fields{
+			"function": "Push",
+			"package":  "api",
+		}, "Sending data to internal api")
 		err := api.Model.AddImage(image)
 		if err != nil {
 			return err
