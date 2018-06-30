@@ -11,6 +11,7 @@
 // @ is an alias to /src
 import Images from '@/components/images.vue'
 import Loader from '@/components/loader.vue'
+import { mapState } from 'vuex'
 
 export default {
   name: 'home',
@@ -19,13 +20,12 @@ export default {
     Loader
   },
   computed: {
-    list () {
-      console.log(this.$store.state.images.images)
-      return this.$store.state.images.images
-    },
+    ...mapState({
+      list: state => state.images.list
+    }),
   },
   mounted() {
-    this.$store.dispatch('fetchImages')
+    this.$store.dispatch('fetchImageList')
   }
 }
 </script>

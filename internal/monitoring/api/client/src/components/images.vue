@@ -29,7 +29,7 @@
         <tbody>
           <tr :key="image.id" v-for="image in list" @click="link(image.id)">
             <th>{{image.tag}}</th>
-            <td>Virity found {{image.vulnerability_cve.length}} CVEs</td>
+            <td>Virity found {{image.cve_count}} CVEs</td>
             <td>{{image.owner.toString()}}</td>
           </tr>
         </tbody>

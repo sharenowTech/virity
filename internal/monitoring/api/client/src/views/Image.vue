@@ -21,7 +21,7 @@
       </div>
     </section>
     <div class="columns is-multiline">
-      <div class="column is-one-quarter-desktop is-half-tablet" :key="cve.Package" v-for="cve in orderedCVEs">
+      <div class="column is-one-quarter-desktop is-half-tablet" :key="cve.Package+cve.Vuln" v-for="cve in orderedCVEs">
         <Cve v-bind="cve" />
       </div>
     </div>
@@ -31,6 +31,7 @@
 import CVE from '@/components/cve.vue'
 import Container from '@/components/container.vue'
 import Loader from '@/components/loader.vue'
+
 export default {
   name: 'cimage',
   components: {
@@ -39,17 +40,18 @@ export default {
     Container
   },
   computed: {
-    imageInfo () {
-      return this.$store.state.images.detail[this.$route.params.id] ? this.$store.state.images.detail[this.$route.params.id] : ''
+    imageInfo: function () {
+      var image = this.$store.getters.getImageById(this.$route.params.id)
+      return image ? image : ''
     },
-    orderedCVEs () {
+    orderedCVEs: function () {
       let info = this.imageInfo
-      return info.vulnerability_cve.sort((a, b) => b.Severity-a.Severity);
+      return info.vulnerability_cve.sort((a, b) => a.Severity-b.Severity);
     }
   },
   mounted() {
     this.$store.dispatch({
-      type: 'fetchDetails',
+      type: 'fetchImageDetail',
       id: this.$route.params.id
     })
   }

@@ -3,14 +3,14 @@
     <div class="card-content">
       <p class="title is-4 has-text-justified">
         <span class="icon" :class="severity">
-          <i class="fas fa-thermometer-empty" v-if="Severity <= 1"></i>
-          <i class="fas fa-thermometer-full" v-else-if="Severity > 2"></i>
+          <i class="fas fa-thermometer-full" v-if="Severity == 0"></i>
+          <i class="fas fa-thermometer-empty" v-else-if="Severity >= 2"></i>
           <i class="fas fa-thermometer-half" v-else></i>
         </span>
         {{Vuln}}
       </p>
       <p class="subtitle">
-        {{Package}}
+        {{Package | truncate(28)}}
       </p>
       <div class="content">
         <p v-if="Fix !== 'None'">Fix: {{Fix}}</p>
@@ -63,12 +63,12 @@ export default {
       },
       severity() {
         switch (this.Severity) {
-          case 3:
-            return {'severity-high': true}
-          case 2:
-            return {'severity-medium': true}
-          case 1:
           case 0:
+            return {'severity-high': true}
+          case 1:
+            return {'severity-medium': true}
+          case 2:
+          case 3:
             return {'severity-low': true}
           default: 
             return {}  

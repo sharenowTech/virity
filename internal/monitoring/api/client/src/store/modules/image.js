@@ -1,39 +1,42 @@
-import api from '@/api'
-//import api from '@/api/local'
+//import api from '@/api'
+import api from '@/api/local'
 
 const defaultState = {
     images: [],
-    detail: {},
+    list: []
 };
 
 const actions = {
-    fetchImages: (context) => {
+    fetchImageList: (context) => {
         api.fetchImages()
-            .then((response) => context.commit('IMAGES_UPDATED', response))
+            .then((response) => context.commit('LIST_UPDATED', response))
             .catch((error) => console.error(error))
     },
-    fetchDetails: (context, params) => {
+    fetchImageDetail: (context, params) => {
         api.fetchImageDetails(params.id)
-            .then((response) => context.commit('DETAILS_UPDATED', response))
+            .then((response) => context.commit('IMAGE_UPDATED', response))
             .catch((error) => console.error(error))
     }
 };
 
 const mutations = {
-    IMAGES_UPDATED: (state, images) => {
-        state.images = images;
+    LIST_UPDATED: (state, images) => {
+        state.list = images;
     },
-    DETAILS_UPDATED: (state, image) => {
+    IMAGE_UPDATED: (state, image) => {
         // Change to Map if supported
-        state.detail = {
+        /*state.detail = {
             [image.id]: image,
             ...state.detail
-        };
+        };*/
+        state.images.push(image);
     },
 };
 
 const getters = {
-
+    getImageById: (state) => (id) => {
+        return state.images.find( image => image.id === id)
+    }
 };
 
 export default {
