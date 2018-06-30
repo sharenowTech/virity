@@ -6,7 +6,7 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-var model = ImageModel{}
+var model = NewModel()
 
 func TestAddImage(t *testing.T) {
 	image := pluginregistry.ImageStack{
@@ -72,13 +72,9 @@ func TestAddImage(t *testing.T) {
 func TestGetImageList(t *testing.T) {
 	TestAddImage(t)
 
-	image, err := model.GetImageList()
+	_, err := model.GetImageList()
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
-	t.Log(string(image))
-	t.Fail()
-
 }
