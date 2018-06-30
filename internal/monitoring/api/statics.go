@@ -2,8 +2,6 @@ package api
 
 import "net/http"
 
-const static = "static"
-
 type staticsServer struct {
 	assetsDir string
 }
