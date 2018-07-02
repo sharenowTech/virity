@@ -1,5 +1,5 @@
-//import api from '@/api'
-import api from '@/api/local'
+import api from '@/api'
+//import api from '@/api/local'
 
 const defaultState = {
     images: [],
