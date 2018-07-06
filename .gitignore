@@ -49,25 +49,3 @@ Temporary Items
 build
 docker_commands.txt
 ba/
-
-.DS_Store
-internal/monitoring/api/client/node_modules
-internal/monitoring/api/client/dist/
-
-# local env files
-internal/monitoring/api/client/.env.local
-internal/monitoring/api/client/.env.*.local
-
-# Log files
-internal/monitoring/api/client/npm-debug.log*
-internal/monitoring/api/client/yarn-debug.log*
-internal/monitoring/api/client/yarn-error.log*
-
-# Editor directories and files
-internal/monitoring/api/client/.idea
-internal/monitoring/api/client/.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw*
