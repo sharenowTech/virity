@@ -16,8 +16,8 @@
     "pkg/types",
     "version"
   ]
-  revision = "fdde8705f5bf9a6d9dbfb0220caf2ee1ac816be8"
-  version = "v3.3.4"
+  revision = "33245c6b5b49130ca99280408fadfab01aac0e48"
+  version = "v3.3.8"
 
 [[projects]]
   name = "github.com/coreos/go-semver"
@@ -125,8 +125,8 @@
     "compiler",
     "extensions"
   ]
-  revision = "ee43cbb60db7bd22502942cccbc39059117352ab"
-  version = "v0.1.0"
+  revision = "7c663266750e7d82587642f65e60bc4083f1f84e"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -154,14 +154,14 @@
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
-  version = "v1.7.6"
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
+  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -178,8 +178,8 @@
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -191,7 +191,7 @@
   branch = "master"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "778f2e774c725116edbc3d039dc0dfc1cc62aae8"
+  revision = "75068beb13ada9c0ddde611f678523fda7352650"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -199,8 +199,8 @@
     ".",
     "mem"
   ]
-  revision = "63644898a8da0bc22138abf860edaf5277b6102e"
-  version = "v1.1.0"
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -236,7 +236,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "8b1d31080a7692e075c4681cb2458454a1fe0706"
+  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
@@ -249,10 +249,9 @@
     "http2/hpack",
     "idna",
     "internal/socks",
-    "lex/httplex",
     "proxy"
   ]
-  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
+  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
 
 [[projects]]
   branch = "master"
@@ -261,7 +260,7 @@
     "unix",
     "windows"
   ]
-  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
+  revision = "ad87a3a340fa7f3bed189293fbfa7a9b7e021ae1"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -335,7 +334,7 @@
     "storage/v1alpha1",
     "storage/v1beta1"
   ]
-  revision = "b7d77fa220f5130ec63c2ca7167dd9653449c64d"
+  revision = "0629ca67c7adeabf4d1bc63cb816ce9e0d658406"
 
 [[projects]]
   name = "k8s.io/apimachinery"

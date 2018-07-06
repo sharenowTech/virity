@@ -6,15 +6,18 @@ import (
 	"time"
 
 	"github.com/car2go/virity/cmd/server/worker"
+	"github.com/car2go/virity/cmd/server/worker/task"
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
+const workers = 10
 const errRetries = 5
 
 // Manager contains all available agents, creates workers and assigns tasks
 type Manager struct {
-	agents sync.Map
+	agents     sync.Map
+	dispatcher *worker.Dispatcher
 }
 
 // Plugins is a wrapper for worker plugins
@@ -32,6 +35,11 @@ type agent struct {
 }
 
 var defManager = &Manager{}
+
+func init() {
+	defManager.dispatcher = worker.NewDispatcher(workers)
+	defManager.dispatcher.Run()
+}
 
 // Delete agent from Scheduler
 func (man *Manager) delete(key string) {
@@ -72,17 +80,19 @@ func Restore(p Plugins, cycleID int) error {
 
 // Restore restores data from the store. It should be called only on first run
 func (man *Manager) Restore(p Plugins, cycleID int) error {
-	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
+	var wg sync.WaitGroup
 
-	worker := env.InitMaintainWorker()
-	err := worker.F.Restore(env)
-	if err != nil {
-		return err
-	}
+	template := task.New(&wg, cycleID, 0, p.Store, p.Scanner, p.Monitor)
+	t := template.Maintain(task.Restore)
+	task.AddToQueue(&t)
+
+	wg.Wait()
+
 	log.Info(log.Fields{
 		"package":  "main/workerManager",
 		"function": "Restore",
 	}, "Restored Monitored Data")
+
 	return nil
 }
 
@@ -93,9 +103,8 @@ func Run(p Plugins, cycleID int) {
 
 // Run creates and manages new workers.
 func (man *Manager) Run(p Plugins, cycleID int) {
-	var wg sync.WaitGroup
-
-	env := worker.Init(cycleID, p.Store, p.Scanner, p.Monitor)
+	running := pluginregistry.ContainerGroup{}
+	analyse := pluginregistry.ContainerGroup{}
 
 	man.agents.Range(func(k, v interface{}) bool {
 		key := k.(string)
@@ -112,11 +121,12 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			return true
 		}
 
-		// If agent was just created and no lastestCGroupID exists
+		// If agent was not just created (if agent has a lastestCGroupID)
 		if val.latestCGroupID != 0 {
 			then := time.Unix(val.latestCGroupID, 0)
 			duration := time.Since(then)
 
+			// if agent is inactive
 			if duration > val.data.Lifetime {
 				val.active = false
 				man.agents.Store(key, val)
@@ -124,31 +134,11 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 			}
 		}
 
-		cWorker := env.InitCGroupWorker(*cGroup)
-
-		if val.latestCGroupID == cGroup.ID {
-			log.Debug(log.Fields{
-				"package":       "main/workerManager",
-				"function":      "Run",
-				"agent":         key,
-				"agent_active":  val.active,
-				"last_cGroupID": val.latestCGroupID,
-				"last_check":    val.lastCheck,
-				"cGroupID":      cGroup.ID,
-			}, "Run cGroupWorker for add active images")
-			cWorker.Run(&wg, cWorker.F.Running)
-		} else {
-			log.Debug(log.Fields{
-				"package":       "main/workerManager",
-				"function":      "Run",
-				"agent":         key,
-				"agent_active":  val.active,
-				"last_cGroupID": val.latestCGroupID,
-				"last_check":    val.lastCheck,
-				"cGroupID":      cGroup.ID,
-			}, "Run cGroupWorker for analysing images")
-			cWorker.Run(&wg, cWorker.F.Running, cWorker.F.Analyse)
+		// If something has changed during last fetch, analyze these images
+		if val.latestCGroupID != cGroup.ID {
+			analyse.Container = append(analyse.Container, cGroup.Container...)
 		}
+		running.Container = append(running.Container, cGroup.Container...)
 
 		val.lastCheck = time.Now()
 		val.latestCGroupID = cGroup.ID
@@ -157,10 +147,33 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 		return true
 	})
 
+	log.Debug(log.Fields{
+		"package":  "main/workerManager",
+		"function": "Run",
+		"count":    len(running.Container),
+	}, "Fetched Containers")
+
+	var wg sync.WaitGroup
+
+	template := task.New(&wg, cycleID, 5, p.Store, p.Scanner, p.Monitor)
+
+	for _, container := range running.Container {
+		t := template.Container(container, task.Running)
+		task.AddToQueue(&t)
+	}
+
+	for _, container := range analyse.Container {
+		t := template.Container(container, task.Analyse)
+		task.AddToQueue(&t)
+	}
+
 	wg.Wait()
 
-	mWorker := env.InitMaintainWorker()
-	mWorker.Run(&wg, mWorker.F.Resolve, mWorker.F.Backup)
+	template.Retries = 0
+
+	t := template.Maintain(task.Resolve, task.Backup)
+	task.AddToQueue(&t)
+
 	return
 }
 
