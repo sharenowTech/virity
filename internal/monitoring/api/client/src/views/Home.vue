@@ -26,12 +26,13 @@ export default {
   },
   methods: {
     loadData() {
+      //console.log("load data");
       this.$store.dispatch("fetchImageList");
     }
   },
   mounted() {
     this.loadData();
-    setInterval(() => this.loadData().bind(this), 5000);
+    setInterval(() => this.loadData(), 10000);
   }
 };
 </script>

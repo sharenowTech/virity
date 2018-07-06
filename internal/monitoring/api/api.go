@@ -48,11 +48,16 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 	}
 
 	api.Server = &http.Server{
-		Addr:    ":8080",
+		Addr:    api.URL,
 		Handler: api.Mux,
 	}
 
 	api.Serve()
+
+	log.Debug(log.Fields{
+		"function": "New",
+		"package":  "api",
+	}, "API plugin initialized")
 
 	return api
 }
