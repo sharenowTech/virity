@@ -35,7 +35,7 @@ const mutations = {
 
 const getters = {
     getImageById: (state) => (id) => {
-        return state.images.find( image => image.id === id)
+        return state.images.find(image => image.id === id)
     }
 };
 

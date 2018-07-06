@@ -1,7 +1,19 @@
 package api
 
+import (
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path"
+	"testing"
+
+	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/gorilla/mux"
+)
+
 // Static File Serve not working in test
-/*func TestNew(T *testing.T) {
+func TestNew(T *testing.T) {
 	path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
 	api := ApiService{
 		Mux:     mux.NewRouter(),
@@ -150,6 +162,7 @@ func TestPush(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		t.Error(err)
@@ -159,10 +172,21 @@ func TestPush(t *testing.T) {
 	if response.StatusCode != 200 {
 		t.Errorf("Server not reachable. Code: %v", response.StatusCode)
 	}
+	defer response.Body.Close()
+
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if string(responseData) != "[{\"id\":\"da653cee0545dfbe3c1864ab3ce782805603356a9cc712acc7b3100d9932fa5e\",\"tag\":\"debian:latest\",\"owner\":[\"VIRITY\"],\"cve_count\":5},{\"id\":\"bf51c9974229f0a3790366464fef13e2cdbf0be5b682874f4e78f1538005a800\",\"tag\":\"ubuntu:latest\",\"owner\":[\"VIRITY\"],\"cve_count\":5}]" {
+		t.Errorf("Returned wrong response")
+		t.Log(string(responseData))
+		return
+	}
 
 }
 
 func TestResolve(t *testing.T) {
 
 }
-*/

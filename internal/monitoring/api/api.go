@@ -8,14 +8,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// ApiService holds all necessary server objects
 type ApiService struct {
-	Url     string
+	URL     string
 	Mux     *mux.Router
 	Server  *http.Server
 	Statics *staticsServer
 	Model   Model
 }
 
+// Model is an interface of all functionality a model has to provide
 type Model interface {
 	AddImage(image pluginregistry.ImageStack) error
 	DelImage(id string) error
@@ -39,7 +41,7 @@ func init() {
 // New initializes the plugin
 func New(config pluginregistry.Config) pluginregistry.Monitor {
 	api := ApiService{
-		Url:     config.Endpoint,
+		URL:     config.Endpoint,
 		Mux:     mux.NewRouter(),
 		Statics: newStaticsServer("static"),
 		Model:   NewModel(),
