@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// ApiService holds all necessary server objects
-type ApiService struct {
+// APIService holds all necessary server objects
+type APIService struct {
 	URL     string
 	Mux     *mux.Router
 	Server  *http.Server
@@ -40,7 +40,7 @@ func init() {
 
 // New initializes the plugin
 func New(config pluginregistry.Config) pluginregistry.Monitor {
-	api := ApiService{
+	api := APIService{
 		URL:     config.Endpoint,
 		Mux:     mux.NewRouter(),
 		Statics: newStaticsServer("static"),
@@ -57,7 +57,7 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 	return api
 }
 
-func (api ApiService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
+func (api APIService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
 	if status != pluginregistry.StatusOK {
 		log.Debug(log.Fields{
 			"function": "Push",
@@ -71,17 +71,17 @@ func (api ApiService) Push(image pluginregistry.ImageStack, status pluginregistr
 	return nil
 }
 
-func (api ApiService) Resolve(image pluginregistry.ImageStack) error {
+func (api APIService) Resolve(image pluginregistry.ImageStack) error {
 	api.Model.DelImage(image.MetaData.ImageID)
 	return nil
 }
 
-func (api ApiService) Serve() {
+func (api APIService) Serve() {
 	api.router()
 	go api.Server.ListenAndServe()
 }
 
-func (api ApiService) restartServer() {
+func (api APIService) restartServer() {
 	api.Server.Close()
 	api.Serve()
 }

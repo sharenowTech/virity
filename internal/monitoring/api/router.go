@@ -1,6 +1,6 @@
 package api
 
-func (api ApiService) router() {
+func (api APIService) router() {
 
 	// serve api
 	api.Mux.HandleFunc("/api/image/{id}", api.Image)
