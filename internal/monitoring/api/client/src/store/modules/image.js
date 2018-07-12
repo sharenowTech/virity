@@ -3,7 +3,7 @@ import api from '@/api'
 
 const defaultState = {
     images: [],
-    list: []
+    list: undefined
 };
 
 const actions = {
@@ -36,6 +36,14 @@ const mutations = {
 const getters = {
     getImageById: (state) => (id) => {
         return state.images.find(image => image.id === id)
+    },
+    getImageListSorted: (state) => {
+        if (state.list === undefined) {
+            return undefined
+        }
+        const list = [...state.list].sort((a, b) => parseFloat(b.cve_count) - 
+        parseFloat(a.cve_count));
+        return list
     }
 };
 

@@ -1,7 +1,7 @@
 const fetchImages = () => new Promise((resolve) => {
   setTimeout(() => {
     resolve(
-      [{ "id": "34056f1481eef17bdae484fcd900379d8a17528293dd0d78e5474ba191a630fd", "tag": "docker.io/anchore/anchore-engine:latest", "owner": ["virity"], "cve_count": 4 }, { "id": "969f714dc41e6cdff0bb22f3a09eaef72b1717139cdb9b9b42434eeba65dbb1a", "tag": "hiroakis/docker-sensu-server", "owner": ["virity"], "cve_count": 3 }, { "id": "65bf726222e13b0ceff0bb20bb6f0e99cbf403a7a1f611fdd2aadd0c8919bbcf", "tag": "postgres:10", "owner": ["virity"], "cve_count": 19 }, { "id": "61ad638751093d94c7878b17eee862348aa9fc5b705419b805f506d51b9882e7", "tag": "quay.io/coreos/etcd:v3.3", "owner": ["virity"], "cve_count": 4 }, { "id": "868c71bbeac05b0265afc25a1fef0b531b0829bb96d5d6e6faee55bef751dfd9", "tag": "kaitsh/sensu-client-testing", "owner": ["virity"], "cve_count": 22 }]
+      [{"id":"65bf726222e13b0ceff0bb20bb6f0e99cbf403a7a1f611fdd2aadd0c8919bbcf","tag":"postgres:10","owner":["virity"],"cve_count":3},{"id":"868c71bbeac05b0265afc25a1fef0b531b0829bb96d5d6e6faee55bef751dfd9","tag":"kaitsh/sensu-client-testing","owner":["virity"],"cve_count":3},{"id":"61ad638751093d94c7878b17eee862348aa9fc5b705419b805f506d51b9882e7","tag":"quay.io/coreos/etcd:v3.3","owner":["virity"],"cve_count":4},{"id":"969f714dc41e6cdff0bb22f3a09eaef72b1717139cdb9b9b42434eeba65dbb1a","tag":"hiroakis/docker-sensu-server","owner":["virity"],"cve_count":2},{"id":"34056f1481eef17bdae484fcd900379d8a17528293dd0d78e5474ba191a630fd","tag":"docker.io/anchore/anchore-engine:latest","owner":["virity"],"cve_count":4}]
     )
   }, 2000);
 });

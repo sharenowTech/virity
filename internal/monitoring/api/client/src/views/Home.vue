@@ -1,5 +1,5 @@
 <template>
-  <div v-if="list.length === 0">
+  <div v-if="list === undefined">
     <loader />
   </div>
   <div v-else>
@@ -11,7 +11,7 @@
 // @ is an alias to /src
 import Images from "@/components/images.vue";
 import Loader from "@/components/loader.vue";
-import { mapState } from "vuex";
+import { mapGetters } from "vuex";
 
 export default {
   name: "home",
@@ -19,9 +19,14 @@ export default {
     Images,
     Loader
   },
+  /*filters: {
+    sort: function (list) {
+      return list.sort((a, b) => parseFloat(a.cve_count) - parseFloat(b.cve_count));
+    }
+  },*/
   computed: {
-    ...mapState({
-      list: state => state.images.list
+    ...mapGetters({
+      list: 'getImageListSorted'
     })
   },
   methods: {
