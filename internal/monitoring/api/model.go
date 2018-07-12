@@ -43,7 +43,7 @@ func NewModel() *ImageModel {
 
 // AddImage adds a new image to the API (monitor)
 func (im ImageModel) AddImage(stack pluginregistry.ImageStack) error {
-	err := im.update(func(stack interface{}) error {
+	err := im.changeState(func(stack interface{}) error {
 		if val, ok := stack.(pluginregistry.ImageStack); ok {
 			im.images[val.MetaData.ImageID] = image{
 				ID:         val.MetaData.ImageID,
@@ -55,7 +55,7 @@ func (im ImageModel) AddImage(stack pluginregistry.ImageStack) error {
 			return nil
 		}
 		return fmt.Errorf("Type Error: %v is not an ImageStack", stack)
-	}, stack)
+	})(stack)
 	if err != nil {
 		return err
 	}
@@ -64,13 +64,13 @@ func (im ImageModel) AddImage(stack pluginregistry.ImageStack) error {
 
 // DelImage removes an image from the API (monitor)
 func (im ImageModel) DelImage(id string) error {
-	err := im.update(func(id interface{}) error {
+	err := im.changeState(func(id interface{}) error {
 		if val, ok := id.(string); ok {
 			delete(im.images, val)
 			return nil
 		}
 		return fmt.Errorf("Type Error: %v is not a string", id)
-	}, id)
+	})(id)
 	if err != nil {
 		return err
 	}
@@ -99,17 +99,18 @@ func (im ImageModel) GetImageList() ([]byte, error) {
 			}
 			counter++
 		}
-		err := im.update(func(list interface{}) error {
+		err := im.changeState(func(list interface{}) error {
 			if val, ok := list.([]cacheModel); ok {
 				im.cache = val
 				return nil
 			}
 			return fmt.Errorf("Type Error: %v is not a []cacheModel", list)
-		}, imageList)
+		})(imageList)
 		if err != nil {
 			return nil, err
 		}
 	}
+	im.updated = false
 	return toJSON(im.cache)
 }
 
@@ -118,16 +119,18 @@ func (im ImageModel) GetVulnerabilityList() ([]byte, error) {
 	panic("not implemented")
 }
 
-func (im ImageModel) update(action func(interface{}) error, param interface{}) error {
-	im.mutex.Lock()
-	err := action(param)
-	if err != nil {
+func (im ImageModel) changeState(action func(interface{}) error) func(interface{}) error {
+	return func(param interface{}) error {
+		im.mutex.Lock()
+		err := action(param)
+		if err != nil {
+			im.mutex.Unlock()
+			return err
+		}
+		im.updated = true
 		im.mutex.Unlock()
-		return err
+		return nil
 	}
-	im.updated = true
-	im.mutex.Unlock()
-	return nil
 }
 
 func toJSON(obj interface{}) ([]byte, error) {
