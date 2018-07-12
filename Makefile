@@ -1,5 +1,6 @@
 PKGS := $(shell go list ./... | grep -v /vendor)
 BINARY := virity
+ENV := production
 OS ?= linux
 ARCH ?= amd64
 VERSION ?= latest
@@ -55,7 +56,7 @@ $(CMDs): dep webclient
 .PHONY: webclient
 webclient: 
 	npm install --prefix internal/monitoring/api/client
-	npm run build --prefix internal/monitoring/api/client
+	npm run build --prefix internal/monitoring/api/client -- --mode $(ENV)
 	mkdir -p build
 	rm -rf build/static
 	cp -r internal/monitoring/api/client/dist build/static
