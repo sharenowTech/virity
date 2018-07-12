@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/car2go/virity/internal/pluginregistry"
 )
@@ -16,69 +17,117 @@ type image struct {
 	Owner      []string                   `json:"owner"`
 }
 
-type meta struct {
+type cacheModel struct {
 	ID       string   `json:"id"`
 	Name     string   `json:"tag"`
 	Owner    []string `json:"owner"`
 	CveCount int      `json:"cve_count"`
 }
 
+// ImageModel holds the API data
 type ImageModel struct {
-	images map[string]image
-	meta   []meta
+	images  map[string]image
+	updated bool
+	cache   []cacheModel
+	mutex   *sync.Mutex
 }
 
+// NewModel initializes the ImageModel
+// returns a pointer to the model
 func NewModel() *ImageModel {
 	return &ImageModel{
 		images: make(map[string]image),
-		meta:   make([]meta, 0, 50),
+		mutex:  &sync.Mutex{},
 	}
 }
 
-func (im *ImageModel) AddImage(stack pluginregistry.ImageStack) error {
-	if _, ok := im.images[stack.MetaData.ImageID]; ok {
-		return nil
+// AddImage adds a new image to the API (monitor)
+func (im ImageModel) AddImage(stack pluginregistry.ImageStack) error {
+	err := im.update(func(stack interface{}) error {
+		if val, ok := stack.(pluginregistry.ImageStack); ok {
+			im.images[val.MetaData.ImageID] = image{
+				ID:         val.MetaData.ImageID,
+				Tag:        val.MetaData.Tag,
+				Containers: val.Containers,
+				CVEs:       val.Vuln.CVE,
+				Owner:      val.MetaData.OwnerID,
+			}
+			return nil
+		}
+		return fmt.Errorf("Type Error: %v is not an ImageStack", stack)
+	}, stack)
+	if err != nil {
+		return err
 	}
-	im.images[stack.MetaData.ImageID] = image{
-		ArrayID:    len(im.meta) + 1,
-		ID:         stack.MetaData.ImageID,
-		Tag:        stack.MetaData.Tag,
-		Containers: stack.Containers,
-		CVEs:       stack.Vuln.CVE,
-		Owner:      stack.MetaData.OwnerID,
-	}
-	im.meta = append(im.meta, meta{
-		ID:       stack.MetaData.ImageID,
-		Name:     stack.MetaData.Tag,
-		Owner:    stack.MetaData.OwnerID,
-		CveCount: len(stack.Vuln.CVE),
-	})
 	return nil
 }
 
-func (im *ImageModel) DelImage(id string) error {
-	if img, ok := im.images[id]; ok {
-		im.meta = append(im.meta[:img.ArrayID], im.meta[img.ArrayID+1:]...)
+// DelImage removes an image from the API (monitor)
+func (im ImageModel) DelImage(id string) error {
+	err := im.update(func(id interface{}) error {
+		if val, ok := id.(string); ok {
+			delete(im.images, val)
+			return nil
+		}
+		return fmt.Errorf("Type Error: %v is not a string", id)
+	}, id)
+	if err != nil {
+		return err
 	}
-	delete(im.images, id)
-	im.reinit()
 	return nil
 }
 
-func (im *ImageModel) GetImage(id string) ([]byte, error) {
-	if img, ok := im.images[id]; ok {
-		return toJSON(img)
+// GetImage returns an image to the API (monitor)
+func (im ImageModel) GetImage(id string) ([]byte, error) {
+	if _, ok := im.images[id]; !ok {
+		return nil, fmt.Errorf("Image not found")
 	}
-
-	return nil, fmt.Errorf("Image not found")
+	return toJSON(im.images[id])
 }
 
-func (im *ImageModel) GetImageList() ([]byte, error) {
-	return toJSON(im.meta)
+// GetImageList returns all images to the API (monitor)
+func (im ImageModel) GetImageList() ([]byte, error) {
+	if im.updated == true || im.cache == nil {
+		imageList := make([]cacheModel, len(im.images))
+		counter := 0
+		for _, img := range im.images {
+			imageList[counter] = cacheModel{
+				ID:       img.ID,
+				Name:     img.Tag,
+				Owner:    img.Owner,
+				CveCount: len(img.CVEs),
+			}
+			counter++
+		}
+		err := im.update(func(list interface{}) error {
+			if val, ok := list.([]cacheModel); ok {
+				im.cache = val
+				return nil
+			}
+			return fmt.Errorf("Type Error: %v is not a []cacheModel", list)
+		}, imageList)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return toJSON(im.cache)
 }
 
-func (im *ImageModel) GetVulnerabilityList() ([]byte, error) {
+// GetVulnerabilityList returns all vulnerabilities to the API (monitor)
+func (im ImageModel) GetVulnerabilityList() ([]byte, error) {
 	panic("not implemented")
+}
+
+func (im ImageModel) update(action func(interface{}) error, param interface{}) error {
+	im.mutex.Lock()
+	err := action(param)
+	if err != nil {
+		im.mutex.Unlock()
+		return err
+	}
+	im.updated = true
+	im.mutex.Unlock()
+	return nil
 }
 
 func toJSON(obj interface{}) ([]byte, error) {
@@ -89,12 +138,4 @@ func toJSON(obj interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return json, nil
-}
-
-func (im *ImageModel) reinit() {
-	for id, image := range im.meta {
-		tmp := im.images[image.ID]
-		tmp.ArrayID = id
-		im.images[image.ID] = tmp
-	}
 }

@@ -8,6 +8,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Todo: Alternative for the global state
+var defService = APIService{
+	Mux:     mux.NewRouter(),
+	Statics: newStaticsServer("static"),
+	Model:   NewModel(),
+}
+
 // APIService holds all necessary server objects
 type APIService struct {
 	URL     string
@@ -15,6 +22,7 @@ type APIService struct {
 	Server  *http.Server
 	Statics *staticsServer
 	Model   Model
+	running bool //is true if the server is already running
 }
 
 // Model is an interface of all functionality a model has to provide
@@ -40,26 +48,29 @@ func init() {
 
 // New initializes the plugin
 func New(config pluginregistry.Config) pluginregistry.Monitor {
-	api := APIService{
-		URL:     config.Endpoint,
-		Mux:     mux.NewRouter(),
-		Statics: newStaticsServer("static"),
-		Model:   NewModel(),
+
+	defService.URL = config.Endpoint
+	defService.Server = &http.Server{
+		Addr:    defService.URL,
+		Handler: defService.Mux,
 	}
 
-	api.Server = &http.Server{
-		Addr:    api.URL,
-		Handler: api.Mux,
+	if defService.running == false {
+		defService.Serve()
+		defService.running = true
+	} else {
+		log.Warn(log.Fields{
+			"function": "New",
+			"package":  "api",
+		}, "API Server is already running")
 	}
-
-	api.Serve()
 
 	log.Debug(log.Fields{
 		"function": "New",
 		"package":  "api",
 	}, "API plugin initialized")
 
-	return api
+	return defService
 }
 
 func (api APIService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
