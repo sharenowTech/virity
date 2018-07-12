@@ -35,9 +35,12 @@ export default {
       this.$store.dispatch("fetchImageList");
     }
   },
-  mounted() {
+  created() {
     this.loadData();
-    setInterval(() => this.loadData(), 10000);
+    this.poll = setInterval(() => this.loadData(), 10000);
+  },
+  beforeDestroy() {
+    clearInterval(this.poll)
   }
 };
 </script>
