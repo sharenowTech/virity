@@ -51,8 +51,7 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 
 	defService.URL = config.Endpoint
 	defService.Server = &http.Server{
-		Addr:    defService.URL,
-		Handler: defService.Mux,
+		Addr: defService.URL,
 	}
 
 	if defService.running == false {
