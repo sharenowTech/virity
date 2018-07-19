@@ -5,6 +5,7 @@ import (
 
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -92,8 +93,27 @@ func (api APIService) Resolve(image pluginregistry.ImageStack) error {
 }
 
 func (api APIService) Serve() {
-	api.router()
-	go api.Server.ListenAndServe()
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
+	api.Server.Handler = handlers.CORS(headersOk, originsOk, methodsOk)(defService.Mux)
+	//api.Server.Handler = defService.Mux
+	// serve api
+	api.Mux.HandleFunc("/api/image/{id}", api.Image)
+	api.Mux.HandleFunc("/api/image/", api.ImageList)
+	api.Mux.PathPrefix("/").Handler(api.Statics)
+
+	go func() {
+		err := api.Server.ListenAndServe()
+		if err != nil {
+			log.Error(log.Fields{
+				"function": "Serve",
+				"package":  "api",
+				"error":    err,
+			}, "Failed to serve API Server")
+		}
+	}()
 }
 
 func (api APIService) restartServer() {
