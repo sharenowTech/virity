@@ -9,25 +9,21 @@ import (
 	"testing"
 
 	"github.com/car2go/virity/internal/pluginregistry"
-	"github.com/gorilla/mux"
 )
 
 // Static File Serve not working in test
 func TestNew(T *testing.T) {
 	path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
-	api := APIService{
-		Mux:     mux.NewRouter(),
-		Statics: newStaticsServer(path),
+
+	defService.URL = ":8080"
+	defService.Statics = newStaticsServer(path)
+	defService.Server = &http.Server{
+		Addr: defService.URL,
 	}
 
-	api.Server = &http.Server{
-		Addr:    ":8080",
-		Handler: api.Mux,
-	}
+	defService.Serve()
 
-	api.Serve()
-
-	request, err := http.NewRequest("GET", "http://localhost:8080/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8080", nil)
 
 	if err != nil {
 		T.Error(err)
@@ -44,7 +40,9 @@ func TestNew(T *testing.T) {
 	}
 }
 func TestPush(t *testing.T) {
-	api := New(pluginregistry.Config{})
+	api := New(pluginregistry.Config{
+		Endpoint: "localhost:8080",
+	})
 
 	image := pluginregistry.ImageStack{
 		MetaData: pluginregistry.Image{
