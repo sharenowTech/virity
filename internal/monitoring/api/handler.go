@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (api APIService) ImageList(w http.ResponseWriter, req *http.Request) {
+func (api Service) ImageList(w http.ResponseWriter, req *http.Request) {
 	// The "/" pattern matches everything, so we need to check
 	// that we're at the root here.
 	sendData, err := api.Model.GetImageList()
@@ -19,7 +19,7 @@ func (api APIService) ImageList(w http.ResponseWriter, req *http.Request) {
 	w.Write(sendData)
 }
 
-func (api APIService) Image(w http.ResponseWriter, req *http.Request) {
+func (api Service) Image(w http.ResponseWriter, req *http.Request) {
 	// The "/" pattern matches everything, so we need to check
 	// that we're at the root here.
 	id := mux.Vars(req)

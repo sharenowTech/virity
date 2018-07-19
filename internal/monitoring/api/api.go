@@ -10,14 +10,14 @@ import (
 )
 
 // Todo: Alternative for the global state
-var defService = APIService{
+var defService = Service{
 	Mux:     mux.NewRouter(),
 	Statics: newStaticsServer("static"),
 	Model:   NewModel(),
 }
 
-// APIService holds all necessary server objects
-type APIService struct {
+// Service holds all necessary server objects
+type Service struct {
 	URL     string
 	Mux     *mux.Router
 	Server  *http.Server
@@ -73,7 +73,8 @@ func New(config pluginregistry.Config) pluginregistry.Monitor {
 	return defService
 }
 
-func (api APIService) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
+// Push adds a new image to model
+func (api Service) Push(image pluginregistry.ImageStack, status pluginregistry.MonitorStatus) error {
 	if status != pluginregistry.StatusOK {
 		log.Debug(log.Fields{
 			"function": "Push",
@@ -87,12 +88,14 @@ func (api APIService) Push(image pluginregistry.ImageStack, status pluginregistr
 	return nil
 }
 
-func (api APIService) Resolve(image pluginregistry.ImageStack) error {
+// Resolve deletes an image from the model
+func (api Service) Resolve(image pluginregistry.ImageStack) error {
 	api.Model.DelImage(image.MetaData.ImageID)
 	return nil
 }
 
-func (api APIService) Serve() {
+// Serve sets routes and starts server
+func (api Service) Serve() {
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
@@ -116,7 +119,7 @@ func (api APIService) Serve() {
 	}()
 }
 
-func (api APIService) restartServer() {
+func (api Service) restartServer() {
 	api.Server.Close()
 	api.Serve()
 }
