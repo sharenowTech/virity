@@ -1,5 +1,6 @@
 PKGS := $(shell go list ./... | grep -v /vendor)
 BINARY := virity
+ENV := production
 OS ?= linux
 ARCH ?= amd64
 VERSION ?= latest
@@ -9,7 +10,7 @@ dep: ## Get the dependencies
 	go get -v -d ./...
 
 .PHONY: test
-test: dep
+test: dep webclient
 	go test $(PKGS)
 
 BIN_DIR := $(GOPATH)/bin
@@ -51,6 +52,14 @@ CMD = $(word 1, $@)
 $(CMDs): dep
 	mkdir -p build
 	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -v -ldflags "-X main.version=$(VERSION)" -a -installsuffix cgo -o build/$(BINARY)-$(CMD)-$(OS)-$(ARCH)-v$(VERSION) github.com/car2go/$(BINARY)/cmd/$(CMD)
+
+.PHONY: webclient
+webclient: 
+	npm install --prefix internal/monitoring/api/client
+	npm run build --prefix internal/monitoring/api/client -- --mode $(ENV)
+	mkdir -p build
+	rm -rf build/static
+	cp -r internal/monitoring/api/client/dist build/static
 
 .PHONY: bin
 bin: $(CMDs)

@@ -1,0 +1,53 @@
+### macOS ###
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# End of https://www.gitignore.io/api/go,macos
+
+build
+docker_commands.txt
+ba/
+
+internal/monitoring/api/client/node_modules
+internal/monitoring/api/client/dist/
+
+# local env files
+internal/monitoring/api/client/.env.local
+internal/monitoring/api/client/.env.*.local
+
+# Log files
+internal/monitoring/api/client/npm-debug.log*
+internal/monitoring/api/client/yarn-debug.log*
+internal/monitoring/api/client/yarn-error.log*
+
+# Editor directories and files
+internal/monitoring/api/client/.idea
+internal/monitoring/api/client/.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
