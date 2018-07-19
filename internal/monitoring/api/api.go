@@ -10,20 +10,14 @@ import (
 )
 
 // Todo: Alternative for the global state
-var defService = Service{
-	Mux:     mux.NewRouter(),
-	Statics: newStaticsServer("static"),
-	Model:   NewModel(),
-}
+var runningServices = make(map[string]Service)
 
 // Service holds all necessary server objects
 type Service struct {
-	URL     string
 	Mux     *mux.Router
 	Server  *http.Server
 	Statics *staticsServer
 	Model   Model
-	running bool //is true if the server is already running
 }
 
 // Model is an interface of all functionality a model has to provide
@@ -50,27 +44,33 @@ func init() {
 // New initializes the plugin
 func New(config pluginregistry.Config) pluginregistry.Monitor {
 
-	defService.URL = config.Endpoint
-	defService.Server = &http.Server{
-		Addr: defService.URL,
-	}
-
-	if defService.running == false {
-		defService.Serve()
-		defService.running = true
-	} else {
-		log.Warn(log.Fields{
+	if service, ok := runningServices[config.Endpoint]; ok {
+		log.Info(log.Fields{
 			"function": "New",
 			"package":  "api",
-		}, "API Server is already running")
+			"endpoint": config.Endpoint,
+		}, "API service is already running on specified endpoint")
+		return service
 	}
+
+	service := Service{
+		Mux:     mux.NewRouter(),
+		Statics: newStaticsServer("static"),
+		Model:   NewModel(),
+		Server: &http.Server{
+			Addr: config.Endpoint,
+		},
+	}
+
+	service.Serve()
+	runningServices[config.Endpoint] = service
 
 	log.Debug(log.Fields{
 		"function": "New",
 		"package":  "api",
 	}, "API plugin initialized")
 
-	return defService
+	return service
 }
 
 // Push adds a new image to model
@@ -100,8 +100,7 @@ func (api Service) Serve() {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
-	api.Server.Handler = handlers.CORS(headersOk, originsOk, methodsOk)(defService.Mux)
-	//api.Server.Handler = defService.Mux
+	api.Server.Handler = handlers.CORS(headersOk, originsOk, methodsOk)(api.Mux)
 	// serve api
 	api.Mux.HandleFunc("/api/image/{id}", api.Image)
 	api.Mux.HandleFunc("/api/image/", api.ImageList)
@@ -119,7 +118,13 @@ func (api Service) Serve() {
 	}()
 }
 
-func (api Service) restartServer() {
+func (api Service) StopServer() {
+	endpoint := api.Server.Addr
+	if _, ok := runningServices[endpoint]; !ok {
+		return
+	}
+
+	delete(runningServices, endpoint)
 	api.Server.Close()
-	api.Serve()
+
 }

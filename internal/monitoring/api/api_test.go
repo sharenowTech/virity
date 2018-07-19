@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"reflect"
 	"testing"
+
+	"github.com/gorilla/mux"
 
 	"github.com/car2go/virity/internal/pluginregistry"
 )
@@ -15,13 +18,16 @@ import (
 func TestNew(T *testing.T) {
 	path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
 
-	defService.URL = ":8081"
-	defService.Statics = newStaticsServer(path)
-	defService.Server = &http.Server{
-		Addr: defService.URL,
+	api := Service{
+		Statics: newStaticsServer(path),
+		Server: &http.Server{
+			Addr: ":8081",
+		},
+		Mux:   mux.NewRouter(),
+		Model: NewModel(),
 	}
 
-	defService.Serve()
+	api.Serve()
 
 	request, err := http.NewRequest("GET", "http://localhost:8081", nil)
 
@@ -39,9 +45,23 @@ func TestNew(T *testing.T) {
 		T.Errorf("Server not reachable. Code: %v", response.StatusCode)
 	}
 }
+
+func TestNew2(t *testing.T) {
+	api1 := New(pluginregistry.Config{
+		Endpoint: "localhost:8082",
+	})
+	api2 := New(pluginregistry.Config{
+		Endpoint: "localhost:8082",
+	})
+
+	if !reflect.DeepEqual(api1, api2) {
+		t.Errorf("A different service was returned. Should be the same.")
+	}
+}
+
 func TestPush(t *testing.T) {
 	api := New(pluginregistry.Config{
-		Endpoint: "localhost:8082",
+		Endpoint: "localhost:8083",
 	})
 
 	image := pluginregistry.ImageStack{
@@ -153,7 +173,7 @@ func TestPush(t *testing.T) {
 	api.Push(image, pluginregistry.StatusError)
 	api.Push(image2, pluginregistry.StatusError)
 
-	request, err := http.NewRequest("GET", "http://localhost:8082/api/image/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8083/api/image/", nil)
 
 	//time.Sleep(1 * time.Minute)
 	if err != nil {
