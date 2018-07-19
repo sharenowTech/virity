@@ -41,7 +41,7 @@ func TestNew(T *testing.T) {
 }
 func TestPush(t *testing.T) {
 	api := New(pluginregistry.Config{
-		Endpoint: "localhost:8082",
+		Endpoint: "localhost:8081",
 	})
 
 	image := pluginregistry.ImageStack{
@@ -153,7 +153,7 @@ func TestPush(t *testing.T) {
 	api.Push(image, pluginregistry.StatusError)
 	api.Push(image2, pluginregistry.StatusError)
 
-	request, err := http.NewRequest("GET", "http://localhost:8082/api/image/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8081/api/image/", nil)
 
 	//time.Sleep(1 * time.Minute)
 	if err != nil {
