@@ -15,7 +15,7 @@ import (
 func TestNew(T *testing.T) {
 	path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
 
-	defService.URL = ":8080"
+	defService.URL = ":8081"
 	defService.Statics = newStaticsServer(path)
 	defService.Server = &http.Server{
 		Addr: defService.URL,
@@ -23,7 +23,7 @@ func TestNew(T *testing.T) {
 
 	defService.Serve()
 
-	request, err := http.NewRequest("GET", "http://localhost:8080", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8081", nil)
 
 	if err != nil {
 		T.Error(err)
@@ -41,7 +41,7 @@ func TestNew(T *testing.T) {
 }
 func TestPush(t *testing.T) {
 	api := New(pluginregistry.Config{
-		Endpoint: "localhost:8080",
+		Endpoint: "localhost:8082",
 	})
 
 	image := pluginregistry.ImageStack{
@@ -153,7 +153,7 @@ func TestPush(t *testing.T) {
 	api.Push(image, pluginregistry.StatusError)
 	api.Push(image2, pluginregistry.StatusError)
 
-	request, err := http.NewRequest("GET", "http://localhost:8080/api/image/", nil)
+	request, err := http.NewRequest("GET", "http://localhost:8082/api/image/", nil)
 
 	//time.Sleep(1 * time.Minute)
 	if err != nil {
