@@ -10,7 +10,7 @@ dep: ## Get the dependencies
 	go get -v -d ./...
 
 .PHONY: test
-test: dep
+test: dep webclient
 	go test $(PKGS)
 
 BIN_DIR := $(GOPATH)/bin
