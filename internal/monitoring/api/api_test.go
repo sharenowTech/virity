@@ -29,8 +29,8 @@ func TestNew(T *testing.T) {
 
 	api.Serve()
 
-	time.Sleep(5 * time.Second)
-	request, err := http.NewRequest("GET", "http://127.0.0.1:8081", nil)
+	time.Sleep(1 * time.Second)
+	request, err := http.NewRequest("GET", "http://localhost:8081", nil)
 
 	if err != nil {
 		T.Error(err)
@@ -174,8 +174,8 @@ func TestPush(t *testing.T) {
 	api.Push(image, pluginregistry.StatusError)
 	api.Push(image2, pluginregistry.StatusError)
 
-	time.Sleep(5 * time.Second)
-	request, err := http.NewRequest("GET", "http://0.0.0.0:8083/api/image/", nil)
+	time.Sleep(1 * time.Second)
+	request, err := http.NewRequest("GET", "http://localhost:8083/api/image/", nil)
 
 	//time.Sleep(1 * time.Minute)
 	if err != nil {
