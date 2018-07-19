@@ -24,5 +24,6 @@ export default new Router({
       component: About
     }
   ],
-  linkExactActiveClass: "is-active"
+  linkExactActiveClass: "is-active",
+  mode: 'history',
 })
