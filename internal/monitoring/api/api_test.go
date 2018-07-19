@@ -4,51 +4,53 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path"
 	"reflect"
 	"testing"
 
 	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/gorilla/mux"
 )
 
 // Static File Serve not working in test
 func TestNew(T *testing.T) {
-	/*
-		path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
+	path := path.Join(os.Getenv("GOPATH"), "src/github.com/car2go/virity/internal/monitoring/api/client/dist")
 
-		api := Service{
-			Statics: newStaticsServer(path),
-			Server: &http.Server{
-				Addr: ":8081",
-			},
-			Mux:   mux.NewRouter(),
-			Model: NewModel(),
-		}
+	api := Service{
+		Statics: newStaticsServer(path),
+		Server: &http.Server{
+			Addr: "0.0.0.0:8081",
+		},
+		Mux:   mux.NewRouter(),
+		Model: NewModel(),
+	}
 
-		api.Serve()
+	api.Serve()
 
-		request, err := http.NewRequest("GET", "http://localhost:8081", nil)
+	request, err := http.NewRequest("GET", "http://127.0.0.1:8081", nil)
 
-		if err != nil {
-			T.Error(err)
-			return
-		}
-		response, err := http.DefaultClient.Do(request)
-		if err != nil {
-			T.Error(err)
-			return
-		}
+	if err != nil {
+		T.Error(err)
+		return
+	}
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		T.Error(err)
+		return
+	}
 
-		if response.StatusCode != 200 {
-			T.Errorf("Server not reachable. Code: %v", response.StatusCode)
-		} */
+	if response.StatusCode != 200 {
+		T.Errorf("Server not reachable. Code: %v", response.StatusCode)
+	}
 }
 
 func TestNew2(t *testing.T) {
 	api1 := New(pluginregistry.Config{
-		Endpoint: "localhost:8082",
+		Endpoint: "0.0.0.0:8082",
 	})
 	api2 := New(pluginregistry.Config{
-		Endpoint: "localhost:8082",
+		Endpoint: "0.0.0.0:8082",
 	})
 
 	if !reflect.DeepEqual(api1, api2) {
@@ -58,7 +60,7 @@ func TestNew2(t *testing.T) {
 
 func TestPush(t *testing.T) {
 	api := New(pluginregistry.Config{
-		Endpoint: "localhost:8083",
+		Endpoint: "0.0.0.0:8083",
 	})
 
 	image := pluginregistry.ImageStack{
@@ -170,7 +172,7 @@ func TestPush(t *testing.T) {
 	api.Push(image, pluginregistry.StatusError)
 	api.Push(image2, pluginregistry.StatusError)
 
-	request, err := http.NewRequest("GET", "http://localhost:8083/api/image/", nil)
+	request, err := http.NewRequest("GET", "http://0.0.0.0:8083/api/image/", nil)
 
 	//time.Sleep(1 * time.Minute)
 	if err != nil {
