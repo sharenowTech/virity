@@ -4,63 +4,55 @@ import (
 	"fmt"
 	"path"
 	"reflect"
-	"sync"
 
+	"github.com/car2go/virity/cmd/server/image/model"
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-// Monitored contains a maps to store monitored and currently active images
-type Monitored struct {
-	images sync.Map
-}
-
-var defMonitored = &Monitored{}
-
-// RestoreFrom all monitored images from store
-func RestoreFrom(store pluginregistry.Store) error {
-	return defMonitored.RestoreFrom(store)
+type Model interface {
+	Add(image model.ImageStatus)
+	Delete(image model.ImageStatus)
+	Read(id string) (val model.ImageStatus, ok bool)
+	Range() func(f func(key, val interface{}) bool)
+	Reset()
+	UpdateState(state model.Status, cycleID int, attr model.ImageStatus) model.ImageStatus
 }
 
 // RestoreFrom all monitored images from store
-func (m *Monitored) RestoreFrom(store pluginregistry.Store) error {
+func RestoreFrom(store pluginregistry.Store, m Model) error {
 	stacks, err := store.LoadImageStacks(backupPath)
 	if err != nil {
 		return err
 	}
 
 	for _, img := range stacks {
-		m.images.Store(img.MetaData.ImageID, imageStatus{
-			image: image(img),
-			state: monitored,
+		m.Add(model.ImageStatus{
+			Image: model.Image(img),
+			State: model.Monitored,
 		})
 	}
 	return nil
 }
 
 // Backup all monitored images to store
-func Backup(store pluginregistry.Store) error {
-	return defMonitored.Backup(store)
-}
-
-// Backup all monitored images to store
-func (m *Monitored) Backup(store pluginregistry.Store) error {
+func Backup(store pluginregistry.Store, m Model) error {
 	var err error
-	m.images.Range(func(k, v interface{}) bool {
-		val := v.(imageStatus)
+	m.Range()(func(k, v interface{}) bool {
+		val := v.(model.ImageStatus)
 
-		if val.state != monitored {
+		if val.State != model.Monitored {
 			log.Debug(log.Fields{
 				"package":  "main/image",
 				"function": "Backup",
-				"image":    val.image.MetaData.Tag,
-				"state":    val.state,
-				"imageID":  val.image.MetaData.ImageID,
+				"image":    val.Image.MetaData.Tag,
+				"state":    val.State,
+				"imageID":  val.Image.MetaData.ImageID,
 			}, "Image is not yet monitored. I will not backup")
 			return true
 		}
 
-		err = store.StoreImageStack(pluginregistry.ImageStack(val.image), backupPath)
+		err = store.StoreImageStack(pluginregistry.ImageStack(val.Image), backupPath)
 		if err != nil {
 			return false
 		}
@@ -75,16 +67,11 @@ func (m *Monitored) Backup(store pluginregistry.Store) error {
 }
 
 // Refresh sends all currently monitored images to the monitor.
-func Refresh(monitor pluginregistry.Monitor) error {
-	return defMonitored.Refresh(monitor)
-}
-
-// Refresh sends all currently monitored images to the monitor.
-func (m *Monitored) Refresh(monitor pluginregistry.Monitor) error {
+func Refresh(monitor pluginregistry.Monitor, m Model) error {
 	var err error
-	m.images.Range(func(k, v interface{}) bool {
-		val := v.(imageStatus)
-		err = val.monitor(monitor)
+	m.Range()(func(k, v interface{}) bool {
+		val := v.(model.ImageStatus)
+		err = val.Monitor(monitor)
 		return true
 	})
 	if err != nil {
@@ -94,44 +81,20 @@ func (m *Monitored) Refresh(monitor pluginregistry.Monitor) error {
 }
 
 // Monitor sends the image data to a provided monitor plugin and update its state
-func Monitor(stack imageStatus, cycleID int, monitor pluginregistry.Monitor) error {
-	return defMonitored.Monitor(stack, cycleID, monitor)
-}
-
-// Monitor sends the image data to a provided monitor plugin and update its state
-func (m *Monitored) Monitor(stack imageStatus, cycleID int, monitor pluginregistry.Monitor) error {
-	err := stack.monitor(monitor)
+func Monitor(image model.ImageStatus, cycleID int, monitor pluginregistry.Monitor, m Model) error {
+	err := image.Monitor(monitor)
 	if err != nil {
 		return err
 	}
 
-	err = m.updateState(stack.image.MetaData.ImageID, monitored, cycleID)
-	if err != nil {
-		return err
-	}
+	m.UpdateState(model.Monitored, cycleID, image)
+
 	return nil
 }
 
-// UpdateMonitoredState updates the state of an image (key is provided) in the monitored map
-func (m *Monitored) updateState(key string, state status, cycleID int) error {
-	if val, ok := m.images.Load(key); ok {
-		img := val.(imageStatus)
-		img.state = state
-		img.stateChangedAt = cycleID
-		m.images.Store(key, img)
-		return nil
-	}
-
-	return fmt.Errorf("Image %v not found in monitored", key)
-}
-
-// Analyse scans container image and returns the image data
-func Analyse(container pluginregistry.Container, cycleID int, scanner pluginregistry.Scan) (*imageStatus, error) {
-	return defMonitored.Analyse(container, cycleID, scanner)
-}
-
-// Analyse scans container image and returns the image data
-func (m *Monitored) Analyse(container pluginregistry.Container, cycleID int, scanner pluginregistry.Scan) (*imageStatus, error) {
+// Analyse scans container image
+// The data is persisted in the monitored model
+func Analyse(container pluginregistry.Container, cycleID int, scanner pluginregistry.Scan, m Model) (val model.ImageStatus, analysed bool, err error) {
 	log.Debug(log.Fields{
 		"package":   "main/image",
 		"function":  "Analyse",
@@ -139,69 +102,60 @@ func (m *Monitored) Analyse(container pluginregistry.Container, cycleID int, sca
 		"container": container.Name,
 		"owner":     container.OwnerID,
 		"hostname":  container.Hostname,
-	}, "Add image to running list")
-	stack := m.add(container)
+	}, "Persist current image")
 
-	if stack.state == scanning {
+	var image model.ImageStatus
+	if exists, ok := m.Read(container.ImageID); ok {
+		image = exists
+	} else {
+		image = model.ImageStatus{}
+	}
+	image = model.CreateImageStatus(container, image)
+
+	if image.State == model.Scanning {
 		log.Debug(log.Fields{
 			"package":  "main/image",
 			"function": "Analyse",
-			"image":    stack.image.MetaData.Tag,
-			"id":       stack.image.MetaData.ImageID,
-			"owner":    stack.image.MetaData.OwnerID,
+			"image":    image.Image.MetaData.Tag,
+			"id":       image.Image.MetaData.ImageID,
+			"owner":    image.Image.MetaData.OwnerID,
 		}, "Image is currently being scanned and will therefore not be analysed in this cycle")
-		return &stack, nil
+		return image, false, nil
 	}
 
-	err := m.updateState(stack.image.MetaData.ImageID, scanning, cycleID)
+	image = m.UpdateState(model.Scanning, cycleID, image)
+	vuln, err := image.Scan(scanner)
 	if err != nil {
-		return nil, err
+		m.UpdateState(model.Running, cycleID, image)
+		return image, false, err
 	}
+	image.Image.Vuln = *vuln
 
-	vuln, err := stack.scan(scanner)
-	if err != nil {
-		stateErr := m.updateState(stack.image.MetaData.ImageID, running, cycleID)
-		if stateErr != nil {
-			return nil, err
-		}
-		return nil, err
-	}
+	m.Add(image)
+	image = m.UpdateState(model.Scanned, cycleID, image)
 
-	stack.image.Vuln = *vuln
-	m.images.Store(stack.image.MetaData.ImageID, stack)
-
-	err = m.updateState(stack.image.MetaData.ImageID, scanned, cycleID)
-	if err != nil {
-		return nil, err
-	}
-	return &stack, nil
-
+	return image, true, nil
 }
 
 // Resolve compares monitored and active image maps and resolves differences
-func Resolve(active *Active, cycleID int, monitor pluginregistry.Monitor, store pluginregistry.Store) error {
-	return defMonitored.Resolve(active, cycleID, monitor, store)
-}
-
-// Resolve compares monitored and active image maps and resolves differences
-func (m *Monitored) Resolve(active *Active, cycleID int, monitor pluginregistry.Monitor, store pluginregistry.Store) error {
-	resolvable := m.compare(&active.images, cycleID)
+func Resolve(monitored, active Model, cycleID int, monitor pluginregistry.Monitor, store pluginregistry.Store) error {
+	resolvable := compare(monitored, active, cycleID)
 	for _, elem := range resolvable {
-		switch elem.action {
-		case update:
-			err := elem.monitor(monitor)
+		switch elem.Action {
+		case model.Update:
+			err := elem.Monitor(monitor)
 			if err != nil {
 				return err
 			}
-		case partlyResolve:
+		case model.PartlyResolve:
 			fallthrough
-		case fullyResolve:
-			err := elem.resolve(monitor)
+		case model.FullyResolve:
+			err := elem.Resolve(monitor)
 			if err != nil {
 				return err
 			}
-			m.del(elem)
-			store.Delete(path.Join(backupPath, elem.image.MetaData.ImageID))
+			monitored.Delete(elem)
+			store.Delete(path.Join(backupPath, elem.Image.MetaData.ImageID))
 		default:
 			return fmt.Errorf("Invalid state of resolvable image")
 		}
@@ -210,75 +164,101 @@ func (m *Monitored) Resolve(active *Active, cycleID int, monitor pluginregistry.
 	return nil
 }
 
-// MonitoredDel removes an image from the monitored map, only if the image is currently monitored
-func (m *Monitored) del(is imageStatus) {
-	if is.state == monitored {
+// Delete removes an image from the monitored map, only if the image is currently monitored
+func Delete(is model.ImageStatus, force bool, m Model) {
+	if is.State == model.Monitored || force {
 		log.Info(log.Fields{
 			"package":  "main/image",
 			"function": "del",
-			"image":    is.image.MetaData.Tag,
-			"id":       is.image.MetaData.ImageID,
-			"owner":    is.image.MetaData.OwnerID,
-		}, "Deleting Image from monitored list")
-		m.images.Delete(is.image.MetaData.ImageID)
+			"image":    is.Image.MetaData.Tag,
+			"id":       is.Image.MetaData.ImageID,
+			"owner":    is.Image.MetaData.OwnerID,
+		}, "Deleting Image from model list")
+		m.Delete(is)
 		return
 	}
 	log.Info(log.Fields{
 		"package":  "main/image",
 		"function": "del",
-		"image":    is.image.MetaData.Tag,
-		"id":       is.image.MetaData.ImageID,
-		"owner":    is.image.MetaData.OwnerID,
-		"state":    is.state,
+		"image":    is.Image.MetaData.Tag,
+		"id":       is.Image.MetaData.ImageID,
+		"owner":    is.Image.MetaData.OwnerID,
+		"state":    is.State,
 	}, "Image is not yet monitored. Therefore it cannot be deleted.")
 }
 
-// MonitoredAdd adds an image to the monitored map based on a provided container
-func (m *Monitored) add(container pluginregistry.Container) imageStatus {
-	return dataAdd(&m.images, container)
+// Add adds an image to the monitored map based on a provided container
+func Add(container pluginregistry.Container, m Model) model.ImageStatus {
+	var image model.ImageStatus
+	if val, ok := m.Read(container.ImageID); ok {
+		log.Debug(log.Fields{
+			"package":  "main/image",
+			"function": "Add",
+			"image":    container.Image,
+			"id":       container.ImageID,
+			"owner":    container.OwnerID,
+			"state":    val.State,
+		}, "Image exists. I will update the data")
+
+		image = model.CreateImageStatus(container, val)
+	}
+
+	image = model.CreateImageStatus(container, model.ImageStatus{})
+	m.Add(image)
+	return image
+}
+
+// Reset overwrites the current Model with a new one
+func Reset(m Model) {
+	m.Reset()
+}
+
+// Read returns a value based on a key
+func Read(key string, m Model) (val model.ImageStatus, ok bool) {
+	return m.Read(key)
 }
 
 // Compare compares the monitored and active list and returns all images which should be resolved/updated --> only Images with state "monitored" are considered
-func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
-	different := make([]imageStatus, 0)
-	m.images.Range(func(k, v interface{}) bool {
+func compare(monitored, active Model, cycleID int) []model.ImageStatus {
+	different := make([]model.ImageStatus, 0)
+	monitored.Range()(func(k, v interface{}) bool {
 		// If image is not monitored skip
-		if v.(imageStatus).state != monitored {
+		if v.(model.ImageStatus).State != model.Monitored {
 			log.Debug(log.Fields{
 				"package":  "main/image",
 				"function": "compare",
-				"image":    v.(imageStatus).image.MetaData.Tag,
-				"id":       v.(imageStatus).image.MetaData.ImageID,
-				"owner":    v.(imageStatus).image.MetaData.OwnerID,
+				"image":    v.(model.ImageStatus).Image.MetaData.Tag,
+				"id":       v.(model.ImageStatus).Image.MetaData.ImageID,
+				"owner":    v.(model.ImageStatus).Image.MetaData.OwnerID,
 			}, "I will not check if Image is resolvable, as it is not yet monitored")
 			return true
 		}
 
-		if v.(imageStatus).stateChangedAt > cycleID {
+		if v.(model.ImageStatus).StateChangedAt > cycleID {
 			log.Debug(log.Fields{
 				"package":       "main/image",
 				"function":      "compare",
-				"image":         v.(imageStatus).image.MetaData.Tag,
-				"id":            v.(imageStatus).image.MetaData.ImageID,
-				"owner":         v.(imageStatus).image.MetaData.OwnerID,
-				"cycle_changed": v.(imageStatus).stateChangedAt,
+				"image":         v.(model.ImageStatus).Image.MetaData.Tag,
+				"id":            v.(model.ImageStatus).Image.MetaData.ImageID,
+				"owner":         v.(model.ImageStatus).Image.MetaData.OwnerID,
+				"cycle_changed": v.(model.ImageStatus).StateChangedAt,
 				"current_cycle": cycleID,
 			}, "Image will not be resolved because the current cycleID is too old")
 			return true
 		}
 
-		if val, ok := active.Load(k); ok {
-			mon := v.(imageStatus).image
-			act := val.(imageStatus).image
+		if val, ok := active.Read(k.(string)); ok {
+			mon := v.(model.ImageStatus).Image
+			act := val.Image
 
 			// Partial Resolve if some Owner do not exist anymore
 			if eq := reflect.DeepEqual(mon.MetaData.OwnerID, act.MetaData.OwnerID); !eq {
 				missingOwner := difference(mon.MetaData.OwnerID, act.MetaData.OwnerID)
 				mon.MetaData.OwnerID = missingOwner
 
-				value := v.(imageStatus)
-				value.image = mon
-				value.action = partlyResolve
+				value := v.(model.ImageStatus)
+				value.Image = mon
+				value.Action = model.PartlyResolve
 				different = append(different, value)
 
 				log.Info(log.Fields{
@@ -287,8 +267,8 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 					"image":    mon.MetaData.Tag,
 					"id":       mon.MetaData.ImageID,
 					"owner":    mon.MetaData.OwnerID,
-					"state":    v.(imageStatus).state,
-					"action":   partlyResolve,
+					"state":    v.(model.ImageStatus).State,
+					"action":   model.PartlyResolve,
 				}, "Partly resolve Image")
 				return true
 			}
@@ -299,9 +279,9 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 			}
 
 			mon.Containers = act.Containers
-			value := v.(imageStatus)
-			value.image = mon
-			value.action = update
+			value := v.(model.ImageStatus)
+			value.Image = mon
+			value.Action = model.Update
 			different = append(different, value)
 
 			log.Info(log.Fields{
@@ -310,25 +290,25 @@ func (m *Monitored) compare(active *sync.Map, cycleID int) []imageStatus {
 				"image":    mon.MetaData.Tag,
 				"id":       mon.MetaData.ImageID,
 				"owner":    mon.MetaData.OwnerID,
-				"state":    v.(imageStatus).state,
-				"action":   update,
+				"state":    v.(model.ImageStatus).State,
+				"action":   model.Update,
 			}, "Update Image")
 			return true
 
 		}
 
 		// fully resolve image
-		value := v.(imageStatus)
-		value.action = fullyResolve
+		value := v.(model.ImageStatus)
+		value.Action = model.FullyResolve
 		different = append(different, value)
 		log.Info(log.Fields{
 			"package":  "main/image",
 			"function": "compare",
-			"image":    value.image.MetaData.Tag,
-			"id":       value.image.MetaData.ImageID,
-			"owner":    value.image.MetaData.OwnerID,
-			"state":    v.(imageStatus).state,
-			"action":   fullyResolve,
+			"image":    value.Image.MetaData.Tag,
+			"id":       value.Image.MetaData.ImageID,
+			"owner":    value.Image.MetaData.OwnerID,
+			"state":    v.(model.ImageStatus).State,
+			"action":   model.FullyResolve,
 		}, "Fully resolve Image")
 		return true
 	})

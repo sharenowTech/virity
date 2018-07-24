@@ -19,12 +19,12 @@ func Analyse(c container) error {
 		"package":  "worker",
 		"function": "Analyse",
 	}, "Run task")
-	stack, err := image.Analyse(c.Container, c.Base.CycleID, c.Base.Scanner)
+	stack, _, err := image.Analyse(c.Container, c.Base.CycleID, c.Base.Scanner, monitored)
 	if err != nil {
 		return err
 	}
 
-	err = image.Monitor(*stack, c.Base.CycleID, c.Base.Monitor)
+	err = image.Monitor(stack, c.Base.CycleID, c.Base.Monitor, monitored)
 	if err != nil {
 		return err
 	}
@@ -37,10 +37,7 @@ func Running(c container) error {
 		"package":  "worker",
 		"function": "Running",
 	}, "Run task")
-	err := c.Base.RunningImages.Add(c.Container)
-	if err != nil {
-		return err
-	}
+	image.Add(c.Container, c.Base.RunningImages)
 	return nil
 }
 

@@ -3,16 +3,19 @@ package task
 import (
 	"sync"
 
-	"github.com/car2go/virity/cmd/server/image"
+	"github.com/car2go/virity/cmd/server/image/model"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
 // Queue is the task queue for the workers
 var Queue chan Task
 
+// Monitored (global map to persist currently monitored images)
+var monitored = model.Model{}
+
 // BaseTask is a template for specific tasks. Every Task has a base task. All subtasks share the same waitgroup and RunningImages list.
 type BaseTask struct {
-	RunningImages *image.Active
+	RunningImages *model.Model
 	Store         pluginregistry.Store
 	Scanner       pluginregistry.Scan
 	Monitor       pluginregistry.Monitor
@@ -46,7 +49,7 @@ func AddToQueue(t Task) {
 // New creates a new Basetask.
 func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor pluginregistry.Monitor) BaseTask {
 	return BaseTask{
-		RunningImages: &image.Active{},
+		RunningImages: &model.Model{},
 		wg:            wg,
 		Store:         store,
 		Scanner:       scanner,
