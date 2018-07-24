@@ -11,7 +11,7 @@ import (
 var Queue chan Task
 
 // Monitored (global map to persist currently monitored images)
-var monitored = model.Model{}
+var monitored = model.New()
 
 // BaseTask is a template for specific tasks. Every Task has a base task. All subtasks share the same waitgroup and RunningImages list.
 type BaseTask struct {
@@ -49,7 +49,7 @@ func AddToQueue(t Task) {
 // New creates a new Basetask.
 func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor pluginregistry.Monitor) BaseTask {
 	return BaseTask{
-		RunningImages: &model.Model{},
+		RunningImages: model.New(),
 		wg:            wg,
 		Store:         store,
 		Scanner:       scanner,

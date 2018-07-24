@@ -95,15 +95,6 @@ func Monitor(image model.ImageStatus, cycleID int, monitor pluginregistry.Monito
 // Analyse scans container image
 // The data is persisted in the monitored model
 func Analyse(container pluginregistry.Container, cycleID int, scanner pluginregistry.Scan, m Model) (val model.ImageStatus, analysed bool, err error) {
-	log.Debug(log.Fields{
-		"package":   "main/image",
-		"function":  "Analyse",
-		"image":     container.Image,
-		"container": container.Name,
-		"owner":     container.OwnerID,
-		"hostname":  container.Hostname,
-	}, "Persist current image")
-
 	var image model.ImageStatus
 	if exists, ok := m.Read(container.ImageID); ok {
 		image = exists
@@ -154,7 +145,7 @@ func Resolve(monitored, active Model, cycleID int, monitor pluginregistry.Monito
 			if err != nil {
 				return err
 			}
-			monitored.Delete(elem)
+			Delete(elem, false, monitored)
 			store.Delete(path.Join(backupPath, elem.Image.MetaData.ImageID))
 		default:
 			return fmt.Errorf("Invalid state of resolvable image")

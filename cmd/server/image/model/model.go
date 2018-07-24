@@ -44,6 +44,13 @@ type Model struct {
 	images *sync.Map
 }
 
+func New() *Model {
+	return &Model{
+		images: &sync.Map{},
+	}
+
+}
+
 func (model Model) Add(image ImageStatus) {
 	add(model.images, image)
 }
