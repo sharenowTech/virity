@@ -20,17 +20,17 @@ func New() *ImageMap {
 }
 
 // Add adds a new image to the model
-func (model ImageMap) Add(image image.ImageStatus) {
+func (model ImageMap) Add(image image.Data) {
 	add(model.data, image)
 }
 
 // Delete removes an image from the model
-func (model ImageMap) Delete(image image.ImageStatus) {
+func (model ImageMap) Delete(image image.Data) {
 	delete(model.data, image)
 }
 
 // Read returns the image from the model by a given id (ImageID)
-func (model ImageMap) Read(id string) (val image.ImageStatus, ok bool) {
+func (model ImageMap) Read(id string) (val image.Data, ok bool) {
 	return read(model.data, id)
 }
 
@@ -45,7 +45,7 @@ func (model ImageMap) Reset() {
 }
 
 // UpdateState updates the Status of a provided image in the model
-func (model ImageMap) UpdateState(state image.Status, cycleID int, attr image.ImageStatus) image.ImageStatus {
+func (model ImageMap) UpdateState(state image.Status, cycleID int, attr image.Data) image.Data {
 	// If this image exists in the list, update
 	if image, ok := read(model.data, attr.Image.MetaData.ImageID); ok {
 		image.State = state
@@ -59,20 +59,20 @@ func (model ImageMap) UpdateState(state image.Status, cycleID int, attr image.Im
 	return attr
 }
 
-func add(list *sync.Map, item image.ImageStatus) {
+func add(list *sync.Map, item image.Data) {
 	list.Store(item.Image.MetaData.ImageID, item)
 }
 
-func delete(list *sync.Map, item image.ImageStatus) {
+func delete(list *sync.Map, item image.Data) {
 	list.Delete(item.Image.MetaData.ImageID)
 }
 
-func read(list *sync.Map, id string) (val image.ImageStatus, ok bool) {
+func read(list *sync.Map, id string) (val image.Data, ok bool) {
 	if img, ok := list.Load(id); ok {
-		return img.(image.ImageStatus), true
+		return img.(image.Data), true
 	}
 
-	return image.ImageStatus{}, false
+	return image.Data{}, false
 }
 
 func iterate(list *sync.Map, f func(key, val interface{}) bool) {

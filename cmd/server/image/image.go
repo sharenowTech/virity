@@ -43,8 +43,8 @@ const (
 	Resolved
 )
 
-// ImageStatus contains the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
-type ImageStatus struct {
+// Data contains the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
+type Data struct {
 	Image          Image
 	State          Status
 	Action         Action
@@ -56,20 +56,20 @@ type Image pluginregistry.ImageStack
 
 // Model is an interface of the underlying model
 type Model interface {
-	Add(image ImageStatus)
-	Delete(image ImageStatus)
-	Read(id string) (val ImageStatus, ok bool)
+	Add(image Data)
+	Delete(image Data)
+	Read(id string) (val Data, ok bool)
 	Range(f func(key, val interface{}) bool)
 	Reset()
-	UpdateState(state Status, cycleID int, attr ImageStatus) ImageStatus
+	UpdateState(state Status, cycleID int, attr Data) Data
 }
 
 // CreateImageStatus creates a new ImageStatus data model from a provided container. It updates a existing ImageStatus if provided
-func CreateImageStatus(container pluginregistry.Container, attr ImageStatus) ImageStatus {
+func CreateImageStatus(container pluginregistry.Container, attr Data) Data {
 	containers := appendContainer(attr.Image.Containers, container)
 	owners := appendOwner(attr.Image.MetaData.OwnerID, container.OwnerID)
 
-	return ImageStatus{
+	return Data{
 		Image: Image{
 			MetaData: pluginregistry.Image{
 				ImageID: container.ImageID,
@@ -83,7 +83,7 @@ func CreateImageStatus(container pluginregistry.Container, attr ImageStatus) Ima
 }
 
 // Scan scans image and returns vulnerabilities
-func (i ImageStatus) Scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerabilities, error) {
+func (i Data) Scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerabilities, error) {
 	vuln, scanErr := scanner.Scan(pluginregistry.Image(i.Image.MetaData))
 	if scanErr != nil {
 		return nil, fmt.Errorf("Image: %v - %v", i.Image.MetaData.Tag, scanErr.Error())
@@ -92,7 +92,7 @@ func (i ImageStatus) Scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerab
 }
 
 // Monitor pushes the stack to the specified monitor
-func (i ImageStatus) Monitor(monitor pluginregistry.Monitor) error {
+func (i Data) Monitor(monitor pluginregistry.Monitor) error {
 	configScan := config.GetScanConfig()
 	severity := pluginregistry.VulnSeverity(configScan.SeverityLevel)
 	i.Image.Vuln.CVE = filterCVEs(severity, i.Image.Vuln.CVE)
@@ -113,7 +113,7 @@ func (i ImageStatus) Monitor(monitor pluginregistry.Monitor) error {
 }
 
 // Resolve pushes the stack to the specified monitor to resolve the issue
-func (i ImageStatus) Resolve(monitor pluginregistry.Monitor) error {
+func (i Data) Resolve(monitor pluginregistry.Monitor) error {
 	err := monitor.Resolve(pluginregistry.ImageStack(i.Image))
 	if err != nil {
 		return err
