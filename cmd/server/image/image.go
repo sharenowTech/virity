@@ -3,121 +3,74 @@ package image
 import (
 	"fmt"
 	"sort"
-	"sync"
 
 	"github.com/car2go/virity/internal/config"
 	"github.com/car2go/virity/internal/log"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-// MonitorStatus is the type for monitoring status based on an integer (to create a enum like structure)
-type action int
-
-type status int
-
-const (
-	noop action = iota
-	update
-	partlyResolve
-	fullyResolve
-)
-
-const (
-	running status = iota
-	scanning
-	scanned
-	monitored
-	resolved
-)
-
 const backupPath = "Backup/Monitored"
 
-// ImageStatus contains the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
-type imageStatus struct {
-	image          image
-	state          status
-	action         action
-	stateChangedAt int
+// Action defines an enum type to tag images with a "todo"
+// e.g. FullyResolve to remove the image if it is not running anymore
+type Action int
+
+// Status defines an enum type to tag images with their current status
+// e.g. Scanning if an image is currently being scanned
+type Status int
+
+const (
+	// Noop (No Operation) is default.
+	noop Action = iota
+	// Update image --> something has changed (new container etc.)
+	Update
+	// PartlyResolve image --> some containers with this image are not running anymore. Remove these containers and owner from the image
+	PartlyResolve
+	// FullyResolve image --> the image is not running anymore. It will be removed completely
+	FullyResolve
+)
+
+const (
+	// Running --> Image is running but not yet monitored or scanned
+	Running Status = iota
+	// Scanning --> Image is currently being scanned
+	Scanning
+	// Scanned --> Image is scanned but not yet monitored
+	Scanned
+	// Monitored --> Image data is sent to a monitoring tool
+	Monitored
+	// Resolved --> Image is not running anymore and therefore is is resolved
+	Resolved
+)
+
+// Data contains the image, the current state of the image (running, scanned or monitored) and if it needs to be resolved or updated
+type Data struct {
+	Image          Image
+	State          Status
+	Action         Action
+	StateChangedAt int
 }
 
-type image pluginregistry.ImageStack
+// Image is a wrapper for the pluginregistry ImageStack
+type Image pluginregistry.ImageStack
 
-// Scan scans image and returns vulnerabilities
-func (i imageStatus) scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerabilities, error) {
-	vuln, scanErr := scanner.Scan(pluginregistry.Image(i.image.MetaData))
-	if scanErr != nil {
-		return nil, fmt.Errorf("Image: %v - %v", i.image.MetaData.Tag, scanErr.Error())
-	}
-	return vuln, nil
+// Model is an interface of the underlying model
+type Model interface {
+	Add(image Data)
+	Delete(image Data)
+	Read(id string) (val Data, ok bool)
+	Range(f func(key, val interface{}) bool)
+	Reset()
+	UpdateState(state Status, cycleID int, attr Data) Data
 }
 
-// Monitor pushes the stack to the specified monitor
-func (i imageStatus) monitor(monitor pluginregistry.Monitor) error {
-	configScan := config.GetScanConfig()
-	severity := pluginregistry.VulnSeverity(configScan.SeverityLevel)
-	i.image.Vuln.CVE = filterCVEs(severity, i.image.Vuln.CVE)
-	log.Info(log.Fields{
-		"package":  "main/image",
-		"function": "monitor",
-		"count":    len(i.image.Vuln.CVE),
-		"severity": severity,
-		"image":    i.image.MetaData.Tag,
-	}, "Vulnerabilities found")
+// CreateImageStatus creates a new ImageStatus data model from a provided container. It updates a existing ImageStatus if provided
+func CreateImageStatus(container pluginregistry.Container, attr Data) Data {
+	containers := appendContainer(attr.Image.Containers, container)
+	owners := appendOwner(attr.Image.MetaData.OwnerID, container.OwnerID)
 
-	status := evalStatus(i.image.Vuln.CVE, severity)
-	err := monitor.Push(pluginregistry.ImageStack(i.image), status)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Resolve pushes the stack to the specified monitor to resolve the issue
-func (i imageStatus) resolve(monitor pluginregistry.Monitor) error {
-	err := monitor.Resolve(pluginregistry.ImageStack(i.image))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// DataAdd extracts the image from a container and adds it to a map
-func dataAdd(data *sync.Map, container pluginregistry.Container) imageStatus {
-	if val, ok := data.Load(container.ImageID); ok {
-		log.Info(log.Fields{
-			"package":  "main/image",
-			"function": "dataAdd",
-			"image":    container.Image,
-			"id":       container.ImageID,
-			"owner":    container.OwnerID,
-			"state":    val.(imageStatus).state,
-		}, "Image exists. I will add the container and owner")
-		stack := val.(imageStatus).image
-		stack.Containers = appendContainer(stack.Containers, container)
-		stack.MetaData.OwnerID = appendOwner(stack.MetaData.OwnerID, container.OwnerID)
-
-		is := imageStatus{
-			image: stack,
-			state: running,
-		}
-
-		data.Store(container.ImageID, is)
-		return is
-	}
-	log.Debug(log.Fields{
-		"package":  "main/image",
-		"function": "dataAdd",
-		"image":    container.Image,
-		"id":       container.ImageID,
-		"owner":    container.OwnerID,
-	}, "Add new image to list")
-	containers := make([]pluginregistry.Container, 1)
-	containers[0] = container
-
-	owners := appendOwner(make([]string, 0), container.OwnerID)
-
-	stack, _ := data.LoadOrStore(container.ImageID, imageStatus{
-		image: image{
+	return Data{
+		Image: Image{
 			MetaData: pluginregistry.Image{
 				ImageID: container.ImageID,
 				Tag:     container.Image,
@@ -125,9 +78,47 @@ func dataAdd(data *sync.Map, container pluginregistry.Container) imageStatus {
 			},
 			Containers: containers,
 		},
-		state: running})
+		State: Running,
+	}
+}
 
-	return stack.(imageStatus)
+// Scan scans image and returns vulnerabilities
+func (i Data) Scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerabilities, error) {
+	vuln, scanErr := scanner.Scan(pluginregistry.Image(i.Image.MetaData))
+	if scanErr != nil {
+		return nil, fmt.Errorf("Image: %v - %v", i.Image.MetaData.Tag, scanErr.Error())
+	}
+	return vuln, nil
+}
+
+// Monitor pushes the stack to the specified monitor
+func (i Data) Monitor(monitor pluginregistry.Monitor) error {
+	configScan := config.GetScanConfig()
+	severity := pluginregistry.VulnSeverity(configScan.SeverityLevel)
+	i.Image.Vuln.CVE = filterCVEs(severity, i.Image.Vuln.CVE)
+	log.Info(log.Fields{
+		"package":  "main/image",
+		"function": "monitor",
+		"count":    len(i.Image.Vuln.CVE),
+		"severity": severity,
+		"image":    i.Image.MetaData.Tag,
+	}, "Vulnerabilities found")
+
+	status := evalStatus(i.Image.Vuln.CVE, severity)
+	err := monitor.Push(pluginregistry.ImageStack(i.Image), status)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Resolve pushes the stack to the specified monitor to resolve the issue
+func (i Data) Resolve(monitor pluginregistry.Monitor) error {
+	err := monitor.Resolve(pluginregistry.ImageStack(i.Image))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Appends a container to a provided list if it does not already exist

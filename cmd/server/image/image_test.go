@@ -9,6 +9,8 @@ import (
 
 func TestAddToMonitored(t *testing.T) {
 
+	monitored := NewMap()
+
 	c1 := pluginregistry.Container{
 		ID:        "testID1",
 		Image:     "testImage1",
@@ -57,41 +59,47 @@ func TestAddToMonitored(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	defMonitored.add(c1)
-	defMonitored.add(c2)
-	defMonitored.add(c3)
-	defMonitored.add(c4)
-	defMonitored.add(c5)
-	defMonitored.add(c6)
+	is1, _ := monitored.Read(c1.ImageID)
+	monitored.Add(CreateImageStatus(c1, is1))
+	is2, _ := monitored.Read(c2.ImageID)
+	monitored.Add(CreateImageStatus(c2, is2))
+	is3, _ := monitored.Read(c3.ImageID)
+	monitored.Add(CreateImageStatus(c3, is3))
+	is4, _ := monitored.Read(c4.ImageID)
+	monitored.Add(CreateImageStatus(c4, is4))
+	is5, _ := monitored.Read(c5.ImageID)
+	monitored.Add(CreateImageStatus(c5, is5))
+	is6, _ := monitored.Read(c6.ImageID)
+	monitored.Add(CreateImageStatus(c6, is6))
 
-	defMonitored.images.Range(func(k, v interface{}) bool {
+	monitored.Range(func(k, v interface{}) bool {
 		key := k.(string)
-		val := v.(imageStatus)
-		t.Logf("Key: %v Containers: %v Owners: %v\n", key, val.image.Containers, val.image.MetaData.OwnerID)
+		val := v.(Data)
+		t.Logf("Key: %v Containers: %v Owners: %v\n", key, val.Image.Containers, val.Image.MetaData.OwnerID)
 		return true
 	})
 
-	i1, _ := defMonitored.images.Load("testImageID1")
-	i2, _ := defMonitored.images.Load("testImageID2")
-	i3, _ := defMonitored.images.Load("testImageID3")
+	i1, _ := monitored.Read("testImageID1")
+	i2, _ := monitored.Read("testImageID2")
+	i3, _ := monitored.Read("testImageID3")
 
-	image1 := i1.(imageStatus)
-	image2 := i2.(imageStatus)
-	image3 := i3.(imageStatus)
+	image1 := i1
+	image2 := i2
+	image3 := i3
 
 	t.Log("\n\n")
-	if image1.image.Containers[0].ID != "testID1" {
-		t.Errorf("wrong container ID found. Should be testID1")
-	} else if image1.image.Containers[1].ID != "testID3" {
-		t.Errorf("wrong container ID found. Should be testID3")
-	} else if image1.image.Containers[2].ID != "testID4" {
-		t.Errorf("wrong container ID found. Should be testID4")
-	} else if image2.image.Containers[0].ID != "testID2" {
-		t.Errorf("wrong container ID found. Should be testID2")
-	} else if image2.image.Containers[1].ID != "testID5" {
-		t.Errorf("wrong container ID found. Should be testID5")
-	} else if image3.image.Containers[0].ID != "testID6" {
-		t.Errorf("wrong container ID found. Should be testID6")
+	if image1.Image.Containers[0].ID != "testID1" {
+		t.Errorf("wrong container ID found. Should be testID1 and is %v", image1.Image.Containers[0].ID)
+	} else if image1.Image.Containers[1].ID != "testID3" {
+		t.Errorf("wrong container ID found. Should be testID3 and is %v", image1.Image.Containers[1].ID)
+	} else if image1.Image.Containers[2].ID != "testID4" {
+		t.Errorf("wrong container ID found. Should be testID4 and is %v", image1.Image.Containers[2].ID)
+	} else if image2.Image.Containers[0].ID != "testID2" {
+		t.Errorf("wrong container ID found. Should be testID2 and is %v", image2.Image.Containers[0].ID)
+	} else if image2.Image.Containers[1].ID != "testID5" {
+		t.Errorf("wrong container ID found. Should be testID5 and is %v", image2.Image.Containers[1].ID)
+	} else if image3.Image.Containers[0].ID != "testID6" {
+		t.Errorf("wrong container ID found. Should be testID6 and is %v", image3.Image.Containers[0].ID)
 	}
 
 }

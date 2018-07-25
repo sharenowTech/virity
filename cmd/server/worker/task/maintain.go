@@ -17,7 +17,7 @@ func Resolve(m maintain) error {
 		"package":  "worker",
 		"function": "Resolve",
 	}, "Run task")
-	err := image.Resolve(m.Base.RunningImages, m.Base.CycleID, m.Base.Monitor, m.Base.Store)
+	err := image.Resolve(monitored, m.Base.RunningImages, m.Base.CycleID, m.Base.Monitor, m.Base.Store)
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func Backup(m maintain) error {
 		"package":  "worker",
 		"function": "Backup",
 	}, "Run task")
-	err := image.Backup(m.Base.Store)
+	err := image.Backup(m.Base.Store, monitored)
 	if err != nil {
 		return err
 	}
@@ -43,11 +43,11 @@ func Restore(m maintain) error {
 		"package":  "worker",
 		"function": "Restore",
 	}, "Run task")
-	err := image.RestoreFrom(m.Base.Store)
+	err := image.RestoreFrom(m.Base.Store, monitored)
 	if err != nil {
 		return err
 	}
-	err = image.Refresh(m.Base.Monitor)
+	err = image.Refresh(m.Base.Monitor, monitored)
 	if err != nil {
 		return err
 	}
