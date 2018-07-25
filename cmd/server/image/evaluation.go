@@ -1,4 +1,4 @@
-package model
+package image
 
 import "github.com/car2go/virity/internal/pluginregistry"
 

@@ -61,21 +61,21 @@ func TestAddToMonitored(t *testing.T) {
 	}
 
 	is1, _ := monitored.Read(c1.ImageID)
-	monitored.Add(model.CreateImageStatus(c1, is1))
+	monitored.Add(CreateImageStatus(c1, is1))
 	is2, _ := monitored.Read(c2.ImageID)
-	monitored.Add(model.CreateImageStatus(c2, is2))
+	monitored.Add(CreateImageStatus(c2, is2))
 	is3, _ := monitored.Read(c3.ImageID)
-	monitored.Add(model.CreateImageStatus(c3, is3))
+	monitored.Add(CreateImageStatus(c3, is3))
 	is4, _ := monitored.Read(c4.ImageID)
-	monitored.Add(model.CreateImageStatus(c4, is4))
+	monitored.Add(CreateImageStatus(c4, is4))
 	is5, _ := monitored.Read(c5.ImageID)
-	monitored.Add(model.CreateImageStatus(c5, is5))
+	monitored.Add(CreateImageStatus(c5, is5))
 	is6, _ := monitored.Read(c6.ImageID)
-	monitored.Add(model.CreateImageStatus(c6, is6))
+	monitored.Add(CreateImageStatus(c6, is6))
 
 	monitored.Range(func(k, v interface{}) bool {
 		key := k.(string)
-		val := v.(model.ImageStatus)
+		val := v.(ImageStatus)
 		t.Logf("Key: %v Containers: %v Owners: %v\n", key, val.Image.Containers, val.Image.MetaData.OwnerID)
 		return true
 	})

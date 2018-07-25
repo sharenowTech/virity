@@ -15,7 +15,7 @@ var monitored = model.New()
 
 // BaseTask is a template for specific tasks. Every Task has a base task. All subtasks share the same waitgroup and RunningImages list.
 type BaseTask struct {
-	RunningImages *model.Model
+	RunningImages *model.ImageMap
 	Store         pluginregistry.Store
 	Scanner       pluginregistry.Scan
 	Monitor       pluginregistry.Monitor
