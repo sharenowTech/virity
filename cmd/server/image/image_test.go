@@ -73,7 +73,7 @@ func TestAddToMonitored(t *testing.T) {
 	is6, _ := monitored.Read(c6.ImageID)
 	monitored.Add(model.CreateImageStatus(c6, is6))
 
-	monitored.Range()(func(k, v interface{}) bool {
+	monitored.Range(func(k, v interface{}) bool {
 		key := k.(string)
 		val := v.(model.ImageStatus)
 		t.Logf("Key: %v Containers: %v Owners: %v\n", key, val.Image.Containers, val.Image.MetaData.OwnerID)

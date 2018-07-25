@@ -9,23 +9,35 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-// MonitorStatus is the type for monitoring status based on an integer (to create a enum like structure)
+// Action defines an enum type to tag images with a "todo"
+// e.g. FullyResolve to remove the image if it is not running anymore
 type Action int
 
+// Status defines an enum type to tag images with their current status
+// e.g. Scanning if an image is currently being scanned
 type Status int
 
 const (
+	// Noop (No Operation) is default.
 	noop Action = iota
+	// Update image --> something has changed (new container etc.)
 	Update
+	// PartlyResolve image --> some containers with this image are not running anymore. Remove these containers and owner from the image
 	PartlyResolve
+	// FullyResolve image --> the image is not running anymore. It will be removed completely
 	FullyResolve
 )
 
 const (
+	// Running --> Image is running but not yet monitored or scanned
 	Running Status = iota
+	// Scanning --> Image is currently being scanned
 	Scanning
+	// Scanned --> Image is scanned but not yet monitored
 	Scanned
+	// Monitored --> Image data is sent to a monitoring tool
 	Monitored
+	// Resolved --> Image is not running anymore and therefore is is resolved
 	Resolved
 )
 
@@ -37,41 +49,49 @@ type ImageStatus struct {
 	StateChangedAt int
 }
 
+// Image is a wrapper for the pluginregistry ImageStack
 type Image pluginregistry.ImageStack
 
-// Monitored contains a maps to store monitored and currently active images
-type Model struct {
+// Data contains a maps to store monitored and currently active images
+type Data struct {
 	images *sync.Map
 }
 
-func New() *Model {
-	return &Model{
+// New creates and initializes a new model
+func New() *Data {
+	return &Data{
 		images: &sync.Map{},
 	}
 
 }
 
-func (model Model) Add(image ImageStatus) {
+// Add adds a new image to the model
+func (model Data) Add(image ImageStatus) {
 	add(model.images, image)
 }
 
-func (model Model) Delete(image ImageStatus) {
+// Delete removes an image from the model
+func (model Data) Delete(image ImageStatus) {
 	delete(model.images, image)
 }
 
-func (model Model) Read(id string) (val ImageStatus, ok bool) {
+// Read returns the image from the model by a given id (ImageID)
+func (model Data) Read(id string) (val ImageStatus, ok bool) {
 	return read(model.images, id)
 }
 
-func (model Model) Range() func(f func(key, val interface{}) bool) {
-	return iterate(model.images)
+// Range iterates over the model and applies the given function
+func (model Data) Range(f func(key, val interface{}) bool) {
+	iterate(model.images, f)
 }
 
-func (model Model) Reset() {
+// Reset overwrites the model with empty data
+func (model Data) Reset() {
 	model.images = &sync.Map{}
 }
 
-func (model Model) UpdateState(state Status, cycleID int, attr ImageStatus) ImageStatus {
+// UpdateState updates the Status of a provided image in the model
+func (model Data) UpdateState(state Status, cycleID int, attr ImageStatus) ImageStatus {
 	// If this image exists in the list, update
 	if image, ok := read(model.images, attr.Image.MetaData.ImageID); ok {
 		image.State = state
@@ -101,10 +121,8 @@ func read(list *sync.Map, id string) (val ImageStatus, ok bool) {
 	return ImageStatus{}, false
 }
 
-func iterate(list *sync.Map) func(f func(key, val interface{}) bool) {
-	return func(f func(key, val interface{}) bool) {
-		list.Range(f)
-	}
+func iterate(list *sync.Map, f func(key, val interface{}) bool) {
+	list.Range(f)
 }
 
 // Appends a container to a provided list if it does not already exist
@@ -173,14 +191,6 @@ func (i ImageStatus) Resolve(monitor pluginregistry.Monitor) error {
 		return err
 	}
 	return nil
-}
-
-func (i ImageStatus) GetStatus() Status {
-	return i.State
-}
-
-func (i ImageStatus) GetData() ImageStatus {
-	return i
 }
 
 // CreateImageStatus creates a new ImageStatus data model from a provided container. It updates a existing ImageStatus if provided

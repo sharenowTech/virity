@@ -10,11 +10,12 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
+// Model is an interface of the underlying model
 type Model interface {
 	Add(image model.ImageStatus)
 	Delete(image model.ImageStatus)
 	Read(id string) (val model.ImageStatus, ok bool)
-	Range() func(f func(key, val interface{}) bool)
+	Range(f func(key, val interface{}) bool)
 	Reset()
 	UpdateState(state model.Status, cycleID int, attr model.ImageStatus) model.ImageStatus
 }
@@ -38,7 +39,7 @@ func RestoreFrom(store pluginregistry.Store, m Model) error {
 // Backup all monitored images to store
 func Backup(store pluginregistry.Store, m Model) error {
 	var err error
-	m.Range()(func(k, v interface{}) bool {
+	m.Range(func(k, v interface{}) bool {
 		val := v.(model.ImageStatus)
 
 		if val.State != model.Monitored {
@@ -69,7 +70,7 @@ func Backup(store pluginregistry.Store, m Model) error {
 // Refresh sends all currently monitored images to the monitor.
 func Refresh(monitor pluginregistry.Monitor, m Model) error {
 	var err error
-	m.Range()(func(k, v interface{}) bool {
+	m.Range(func(k, v interface{}) bool {
 		val := v.(model.ImageStatus)
 		err = val.Monitor(monitor)
 		return true
@@ -212,7 +213,7 @@ func Read(key string, m Model) (val model.ImageStatus, ok bool) {
 // Compare compares the monitored and active list and returns all images which should be resolved/updated --> only Images with state "monitored" are considered
 func compare(monitored, active Model, cycleID int) []model.ImageStatus {
 	different := make([]model.ImageStatus, 0)
-	monitored.Range()(func(k, v interface{}) bool {
+	monitored.Range(func(k, v interface{}) bool {
 		// If image is not monitored skip
 		if v.(model.ImageStatus).State != model.Monitored {
 			log.Debug(log.Fields{
