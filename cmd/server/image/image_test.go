@@ -4,13 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/car2go/virity/cmd/server/image/model"
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
 func TestAddToMonitored(t *testing.T) {
 
-	monitored := model.New()
+	monitored := NewMap()
 
 	c1 := pluginregistry.Container{
 		ID:        "testID1",
@@ -75,7 +74,7 @@ func TestAddToMonitored(t *testing.T) {
 
 	monitored.Range(func(k, v interface{}) bool {
 		key := k.(string)
-		val := v.(ImageStatus)
+		val := v.(Data)
 		t.Logf("Key: %v Containers: %v Owners: %v\n", key, val.Image.Containers, val.Image.MetaData.OwnerID)
 		return true
 	})
