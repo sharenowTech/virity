@@ -108,6 +108,22 @@ func GetScanConfig() scannerConfig {
 	}
 }
 
+func GetSingleMonitorConfig(key string) (monitorConfig, error) {
+	data := viper.Get("monitor")
+	list := data.([]interface{})
+
+	configList := make([]monitorConfig, len(list))
+
+	for index, _ := range list {
+		marshall(list[index], &configList[index])
+		if configList[index].Type == key {
+			return configList[index], nil
+		}
+	}
+
+	return monitorConfig{}, fmt.Errorf("No config found for key: %v", key)
+}
+
 func GetMonitorConfig() []monitorConfig {
 	data := viper.Get("monitor")
 	list := data.([]interface{})
@@ -118,7 +134,6 @@ func GetMonitorConfig() []monitorConfig {
 		marshall(list[index], &configList[index])
 	}
 
-	fmt.Println(configList)
 	return configList
 
 }

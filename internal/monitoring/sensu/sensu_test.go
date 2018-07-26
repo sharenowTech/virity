@@ -8,7 +8,7 @@ import (
 )
 
 func TestPush(t *testing.T) {
-	cfg := config.GetMonitorConfig()
+	cfg, _ := config.GetSingleMonitorConfig("sensu")
 	sensu := sensu{
 		endpoint: cfg.Endpoint,
 	}

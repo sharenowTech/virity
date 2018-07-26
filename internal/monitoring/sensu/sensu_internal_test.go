@@ -9,7 +9,7 @@ import (
 )
 
 func TestSendToTCP(t *testing.T) {
-	cfg := config.GetMonitorConfig()
+	cfg, _ := config.GetSingleMonitorConfig("sensu")
 	tcp := sendTCP(cfg.Endpoint)
 
 	err := tcp([]byte("{\"name\":\"localhost-/test\",\"status\":0,\"container_id\":\"\",\"hostname\":\"localhost\",\"vulnerability_cve\":[{\"Fix\":\"None\",\"Package\":\"tar-1.29b-1.1\",\"Severity\":3,\"URL\":\"https://security-tracker.debian.org/tracker/CVE-2005-2541\",\"Vuln\":\"CVE-2005-2541\",\"Description\":\"\"},{\"Fix\":\"0.0.9+deb9u1\",\"Package\":\"sensible-utils-0.0.9\",\"Severity\":1,\"URL\":\"https://security-tracker.debian.org/tracker/CVE-2017-17512\",\"Vuln\":\"CVE-2017-17512\",\"Description\":\"\"},{\"Fix\":\"None\",\"Package\":\"util-linux-2.29.2-1\",\"Severity\":0,\"URL\":\"https://security-tracker.debian.org/tracker/CVE-2016-2779\",\"Vuln\":\"CVE-2016-2779\",\"Description\":\"\"},{\"Fix\":\"None\",\"Package\":\"apt-1.4.8\",\"Severity\":2,\"URL\":\"https://security-tracker.debian.org/tracker/CVE-2011-3374\",\"Vuln\":\"CVE-2011-3374\",\"Description\":\"\"}],\"image_name\":\"debian:latest\",\"image_id\":\"da653cee0545dfbe3c1864ab3ce782805603356a9cc712acc7b3100d9932fa5e\",\"output\":\"anchore found 4 vulnerabilities.\"}"))
