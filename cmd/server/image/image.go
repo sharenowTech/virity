@@ -92,7 +92,7 @@ func (i Data) Scan(scanner pluginregistry.Scan) (*pluginregistry.Vulnerabilities
 }
 
 // Monitor pushes the stack to the specified monitor
-func (i Data) Monitor(monitor pluginregistry.Monitor) error {
+func (i Data) Monitor(monitor ...pluginregistry.Monitor) (endpointErr error) {
 	configScan := config.GetScanConfig()
 	severity := pluginregistry.VulnSeverity(configScan.SeverityLevel)
 	i.Image.Vuln.CVE = filterCVEs(severity, i.Image.Vuln.CVE)
@@ -105,20 +105,28 @@ func (i Data) Monitor(monitor pluginregistry.Monitor) error {
 	}, "Vulnerabilities found")
 
 	status := evalStatus(i.Image.Vuln.CVE, severity)
-	err := monitor.Push(pluginregistry.ImageStack(i.Image), status)
-	if err != nil {
-		return err
+
+	for _, endpoint := range monitor {
+		err := endpoint.Push(pluginregistry.ImageStack(i.Image), status)
+		if err != nil {
+			endpointErr = err
+			continue
+		}
 	}
-	return nil
+	return
 }
 
 // Resolve pushes the stack to the specified monitor to resolve the issue
-func (i Data) Resolve(monitor pluginregistry.Monitor) error {
-	err := monitor.Resolve(pluginregistry.ImageStack(i.Image))
-	if err != nil {
-		return err
+func (i Data) Resolve(monitor ...pluginregistry.Monitor) (endpointErr error) {
+
+	for _, endpoint := range monitor {
+		err := endpoint.Resolve(pluginregistry.ImageStack(i.Image))
+		if err != nil {
+			endpointErr = err
+			continue
+		}
 	}
-	return nil
+	return
 }
 
 // Appends a container to a provided list if it does not already exist

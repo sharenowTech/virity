@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/car2go/virity/cmd/server/workerManager"
@@ -51,7 +52,7 @@ func scheduled() error {
 	scan, err := createScanner()
 	monitor, err := createMonitor()
 	if err != nil {
-		log.Error(log.Fields{
+		log.Critical(log.Fields{
 			"package":  "main",
 			"function": "scheduled",
 			"error":    err.Error(),
@@ -117,6 +118,7 @@ func main() {
 	}, "Version")
 	config := config.GetStoreConfig()
 
+	fmt.Printf("%+v", config)
 	quit := schedule.Schedule(scheduled, config.IntervalServerPull, "Scan/Monitor")
 
 	switch {

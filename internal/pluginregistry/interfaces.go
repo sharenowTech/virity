@@ -66,6 +66,7 @@ type Store interface {
 
 // Config stores the configuration to initialize the plugin
 type Config struct {
+	PluginID string
 	Endpoint string
 	User     string
 	Password string

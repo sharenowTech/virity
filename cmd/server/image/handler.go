@@ -57,11 +57,11 @@ func Backup(store pluginregistry.Store, m Model) error {
 }
 
 // Refresh sends all currently monitored images to the monitor.
-func Refresh(monitor pluginregistry.Monitor, m Model) error {
+func Refresh(monitor []pluginregistry.Monitor, m Model) error {
 	var err error
 	m.Range(func(k, v interface{}) bool {
 		val := v.(Data)
-		err = val.Monitor(monitor)
+		err = val.Monitor(monitor...)
 		return true
 	})
 	if err != nil {
@@ -71,8 +71,8 @@ func Refresh(monitor pluginregistry.Monitor, m Model) error {
 }
 
 // Monitor sends the image data to a provided monitor plugin and update its state
-func Monitor(image Data, cycleID int, monitor pluginregistry.Monitor, m Model) error {
-	err := image.Monitor(monitor)
+func Monitor(image Data, cycleID int, monitor []pluginregistry.Monitor, m Model) error {
+	err := image.Monitor(monitor...)
 	if err != nil {
 		return err
 	}
@@ -119,19 +119,19 @@ func Analyse(container pluginregistry.Container, cycleID int, scanner pluginregi
 }
 
 // Resolve compares monitored and active image maps and resolves differences
-func Resolve(monitored, active Model, cycleID int, monitor pluginregistry.Monitor, store pluginregistry.Store) error {
+func Resolve(monitored, active Model, cycleID int, monitor []pluginregistry.Monitor, store pluginregistry.Store) error {
 	resolvable := compare(monitored, active, cycleID)
 	for _, elem := range resolvable {
 		switch elem.Action {
 		case Update:
-			err := elem.Monitor(monitor)
+			err := elem.Monitor(monitor...)
 			if err != nil {
 				return err
 			}
 		case PartlyResolve:
 			fallthrough
 		case FullyResolve:
-			err := elem.Resolve(monitor)
+			err := elem.Resolve(monitor...)
 			if err != nil {
 				return err
 			}

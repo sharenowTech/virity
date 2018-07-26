@@ -21,16 +21,18 @@ scanner:
 
 
 monitor:
-  type: "sensu"
-  endpoint: "localhost:3030"
-  username: ""
-  password: ""
-  default-assignee: "virity" # fallback owner of tickets
-  create-tickets: true
+  - type: "sensu"
+    endpoint: "localhost:3030"
+    default-assignee: "virity" # fallback owner of tickets
+    create-tickets: true
+  - type: "internal"
+    endpoint: ":8080"
+    default-assignee: "virity" # fallback owner of tickets
+    create-tickets: true
+  
 
 store:
   type: "etcd"
-  endpoint: "http://localhost:2379"
-  interval:
-    agentPush: "20m" # interval when agent sends container (should be at least stackInterval/3)
-    serverPoll: "5m" # interval when server pulls container for analysis
+  endpoint: "http://locahost:2379"
+  agentPush: "20m" # interval when agent sends container (should be at least stackInterval/3)
+  serverPoll: "5m" # interval when server pulls container for analysis

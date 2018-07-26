@@ -18,7 +18,7 @@ type BaseTask struct {
 	RunningImages *image.Map
 	Store         pluginregistry.Store
 	Scanner       pluginregistry.Scan
-	Monitor       pluginregistry.Monitor
+	Monitor       []pluginregistry.Monitor
 	Retries       int
 	CycleID       int
 	wg            *sync.WaitGroup
@@ -47,7 +47,7 @@ func AddToQueue(t Task) {
 }
 
 // New creates a new Basetask.
-func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor pluginregistry.Monitor) BaseTask {
+func New(wg *sync.WaitGroup, cycleID int, maxRetries int, store pluginregistry.Store, scanner pluginregistry.Scan, monitor []pluginregistry.Monitor) BaseTask {
 	return BaseTask{
 		RunningImages: image.NewMap(),
 		wg:            wg,

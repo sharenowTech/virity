@@ -23,7 +23,7 @@ type Manager struct {
 // Plugins is a wrapper for worker plugins
 type Plugins struct {
 	Scanner pluginregistry.Scan
-	Monitor pluginregistry.Monitor
+	Monitor []pluginregistry.Monitor
 	Store   pluginregistry.Store
 }
 

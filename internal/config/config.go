@@ -1,46 +1,65 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 )
 
 var Config string
 
 type monitorConfig struct {
-	Type            string
-	Endpoint        string
-	Username        string
-	Password        string
-	DefaultAssignee string
-	CreateTickets   bool
+	Type     string `json:"type"`
+	Endpoint string `json:"endpoint"`
+	//Username        string `json:"username"`
+	//Password        string `json:"password"`
+	DefaultAssignee string `json:"default-assignee"`
+	CreateTickets   bool   `json:"create-tickets"`
 }
 
 type generalConfig struct {
-	LogLevel      string
-	LogType       string
-	AgentLifetime time.Duration
-	AgentSeed     int64
-	AgentEnv      string
+	LogLevel      string        `json:"loglevel"`
+	LogType       string        `json:"logtype"`
+	AgentLifetime time.Duration `json:"agent-lifetime"`
+	AgentSeed     int64         `json:"agent-seed"`
+	AgentEnv      string        `json:"agent-env"`
 }
 
 type scannerConfig struct {
-	Type          string
-	Endpoint      string
-	Username      string
-	Password      string
-	SeverityLevel int
+	Type          string `json:"type"`
+	Endpoint      string `json:"endpoint"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	SeverityLevel int    `json:"severity-level"`
 }
 
 type storeConfig struct {
-	Type               string
-	Endpoint           string
-	IntervalAgentPush  time.Duration
-	IntervalServerPull time.Duration
+	Type               string        `json:"type"`
+	Endpoint           string        `json:"endpoint"`
+	IntervalAgentPush  time.Duration `json:"agentPush"`
+	IntervalServerPull time.Duration `json:"serverPoll"`
+}
+
+type Duration struct {
+	time.Duration
+}
+
+func (self *Duration) UnmarshalJSON(b []byte) (err error) {
+	s := string(b)
+
+	// Get rid of the quotes "" around the value.
+	// A second option would be to include them
+	s = s[1 : len(s)-1]
+
+	t, err := time.ParseDuration(s)
+
+	self.Duration = t
+	return
 }
 
 func init() {
@@ -73,8 +92,8 @@ func init() {
 func GetStoreConfig() storeConfig {
 	return storeConfig{
 		Endpoint:           viper.GetString("store.endpoint"),
-		IntervalAgentPush:  viper.GetDuration("store.interval.agentPush"),
-		IntervalServerPull: viper.GetDuration("store.interval.serverPoll"),
+		IntervalAgentPush:  viper.GetDuration("store.agentPush"),
+		IntervalServerPull: viper.GetDuration("store.serverPoll"),
 		Type:               viper.GetString("store.type"),
 	}
 }
@@ -89,15 +108,19 @@ func GetScanConfig() scannerConfig {
 	}
 }
 
-func GetMonitorConfig() monitorConfig {
-	return monitorConfig{
-		Type:            viper.GetString("monitor.type"),
-		Endpoint:        viper.GetString("monitor.endpoint"),
-		Username:        viper.GetString("monitor.username"),
-		Password:        viper.GetString("monitor.password"),
-		DefaultAssignee: viper.GetString("monitor.default-assignee"),
-		CreateTickets:   viper.GetBool("monitor.create-tickets"),
+func GetMonitorConfig() []monitorConfig {
+	data := viper.Get("monitor")
+	list := data.([]interface{})
+
+	configList := make([]monitorConfig, len(list))
+
+	for index, _ := range list {
+		marshall(list[index], &configList[index])
 	}
+
+	fmt.Println(configList)
+	return configList
+
 }
 
 func GetGeneralConfig() generalConfig {
@@ -107,5 +130,20 @@ func GetGeneralConfig() generalConfig {
 		AgentLifetime: viper.GetDuration("general.agent-lifetime"),
 		AgentSeed:     viper.GetInt64("general.agent-seed"),
 		AgentEnv:      viper.GetString("general.agent-env"),
+	}
+}
+
+func marshall(v interface{}, obj interface{}) {
+
+	elemMap := cast.ToStringMap(v)
+
+	bytes, err := json.Marshal(&elemMap)
+	if err != nil {
+		panic(fmt.Sprintf("Could not parse config: %v", err))
+	}
+
+	err = json.Unmarshal(bytes, &obj)
+	if err != nil {
+		panic(fmt.Sprintf("Could not parse config: %v", err))
 	}
 }

@@ -5,15 +5,20 @@ import (
 	"github.com/car2go/virity/internal/pluginregistry"
 )
 
-func createMonitor() (pluginregistry.Monitor, error) {
+func createMonitor() ([]pluginregistry.Monitor, error) {
 	configMonitor := config.GetMonitorConfig()
-	monitor, err := pluginregistry.NewMonitor(configMonitor.Type, pluginregistry.Config{
-		Endpoint:        configMonitor.Endpoint,
-		User:            configMonitor.Username,
-		Password:        configMonitor.Password,
-		DefaultAssignee: configMonitor.DefaultAssignee,
-		CreateTickets:   configMonitor.CreateTickets,
-	})
+	config := make([]pluginregistry.Config, len(configMonitor))
+	for index, val := range configMonitor {
+		config[index] = pluginregistry.Config{
+			PluginID: val.Type,
+			Endpoint: val.Endpoint,
+			//User:            configMonitor.Username,
+			//Password:        configMonitor.Password,
+			DefaultAssignee: val.DefaultAssignee,
+			CreateTickets:   val.CreateTickets,
+		}
+	}
+	monitor, err := pluginregistry.NewMonitor(config)
 	if err != nil {
 		return nil, err
 	}

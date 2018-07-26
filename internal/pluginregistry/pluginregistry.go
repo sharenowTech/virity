@@ -51,14 +51,20 @@ func NewScanner(key string, config Config) (Scan, error) {
 }
 
 // NewMonitor creates a new monitor instance with provided plugin key
-func NewMonitor(key string, config Config) (Monitor, error) {
-	if _, ok := monitor[key]; !ok {
-		//log.Warn("Plugin " + key + " already assigned.")
-		return nil, fmt.Errorf("monitor %s not found", key)
+func NewMonitor(config []Config) ([]Monitor, error) {
+	monitorList := make([]Monitor, len(config))
+	for index, val := range config {
+		if _, ok := monitor[val.PluginID]; !ok {
+			//log.Warn("Plugin " + key + " already assigned.")
+			return nil, fmt.Errorf("monitor %s not found", val.PluginID)
+		}
+
+		newMonitor := monitor[val.PluginID]
+		monitorList[index] = newMonitor(val)
+
 	}
-	newMonitor := monitor[key]
-	monitor := newMonitor(config)
-	return monitor, nil
+
+	return monitorList, nil
 }
 
 // NewStore creates a new store instance with provided plugin key
