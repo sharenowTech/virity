@@ -7,14 +7,14 @@ import (
 
 func createMonitor() ([]pluginregistry.Monitor, error) {
 	configMonitor := config.GetMonitorConfig()
-	config := make([]pluginregistry.Config, len(configMonitor))
-	for index, val := range configMonitor {
+	config := make([]pluginregistry.Config, len(configMonitor.Tools))
+	for index, val := range configMonitor.Tools {
 		config[index] = pluginregistry.Config{
 			PluginID: val.Type,
-			Endpoint: val.Endpoint,
+			Endpoint: val.URL,
 			//User:            configMonitor.Username,
 			//Password:        configMonitor.Password,
-			DefaultAssignee: val.DefaultAssignee,
+			DefaultAssignee: configMonitor.DefaultAssignee,
 			CreateTickets:   val.CreateTickets,
 		}
 	}

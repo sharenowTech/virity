@@ -21,14 +21,14 @@ scanner:
 
 
 monitor:
-  - type: "sensu"
-    endpoint: "localhost:3030"
-    default-assignee: "virity" # fallback owner of tickets
-    create-tickets: true
-  - type: "internal"
-    endpoint: ":8080"
-    default-assignee: "virity" # fallback owner of tickets
-    create-tickets: true
+  default-assignee: "virity" # fallback owner of tickets
+  endpoints:
+    - type: "sensu"
+      endpoint: "localhost:3030"
+      create-tickets: true
+    - type: "internal"
+      endpoint: ":8080"
+      create-tickets: true
   
 
 store:

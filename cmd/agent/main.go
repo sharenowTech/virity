@@ -142,11 +142,9 @@ func Send() error {
 	}
 
 	var base provider.Provider
-	// TODO: make same default assignee for all monitoring plugins
-	monconfig, _ := config.GetSingleMonitorConfig("sensu")
 	baseConfig := provider.BaseProvider{
 		OwnerKey:      ownerKey,
-		FallbackOwner: monconfig.DefaultAssignee,
+		FallbackOwner: config.GetMonitorConfig().DefaultAssignee,
 	}
 
 	switch Environment {

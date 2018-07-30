@@ -13,13 +13,17 @@ import (
 
 var Config string
 
-type monitorConfig struct {
-	Type     string `json:"type"`
-	Endpoint string `json:"endpoint"`
+type endpoint struct {
+	Type string `json:"type"`
+	URL  string `json:"endpoint"`
 	//Username        string `json:"username"`
 	//Password        string `json:"password"`
-	DefaultAssignee string `json:"default-assignee"`
-	CreateTickets   bool   `json:"create-tickets"`
+	CreateTickets bool `json:"create-tickets"`
+}
+
+type monitorConfig struct {
+	DefaultAssignee string     `json:"default-assignee"`
+	Tools           []endpoint `json:"endpoints"`
 }
 
 type generalConfig struct {
@@ -108,33 +112,16 @@ func GetScanConfig() scannerConfig {
 	}
 }
 
-func GetSingleMonitorConfig(key string) (monitorConfig, error) {
-	data := viper.Get("monitor")
-	list := data.([]interface{})
+func GetMonitorConfig() monitorConfig {
+	data := viper.GetStringMap("monitor")
 
-	configList := make([]monitorConfig, len(list))
+	fmt.Println(data)
 
-	for index, _ := range list {
-		marshall(list[index], &configList[index])
-		if configList[index].Type == key {
-			return configList[index], nil
-		}
-	}
+	config := monitorConfig{}
+	marshall(data, &config)
 
-	return monitorConfig{}, fmt.Errorf("No config found for key: %v", key)
-}
-
-func GetMonitorConfig() []monitorConfig {
-	data := viper.Get("monitor")
-	list := data.([]interface{})
-
-	configList := make([]monitorConfig, len(list))
-
-	for index, _ := range list {
-		marshall(list[index], &configList[index])
-	}
-
-	return configList
+	fmt.Println(config)
+	panic("END")
 
 }
 
