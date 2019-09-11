@@ -1,7 +1,7 @@
 # Virity
 [![Go Report Card](https://goreportcard.com/badge/github.com/sharenowTech/virity)](https://goreportcard.com/report/github.com/sharenowTech/virity)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/sharenowTech/virity/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/car2go/virity.svg?branch=master)](https://travis-ci.org/car2go/virity)
+[![Build Status](https://travis-ci.org/sharenowTech/virity.svg?branch=master)](https://travis-ci.org/car2go/virity)
 
 ![Virity-Logo](docs/logo.svg)
 
