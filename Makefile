@@ -49,7 +49,7 @@ CMD = $(word 1, $@)
 .PHONY: $(CMDs)
 $(CMDs): dep
 	mkdir -p build
-	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -v -ldflags "-X main.version=$(VERSION)" -a -installsuffix cgo -o build/$(BINARY)-$(CMD)-$(OS)-$(ARCH)-v$(VERSION) github.com/car2go/$(BINARY)/cmd/$(CMD)
+	GOOS=$(OS) GOARCH=$(ARCH) CGO_ENABLED=0 go build -v -ldflags "-X main.version=$(VERSION)" -a -installsuffix cgo -o build/$(BINARY)-$(CMD)-$(OS)-$(ARCH)-v$(VERSION) github.com/sharenowTech/$(BINARY)/cmd/$(CMD)
 
 .PHONY: bin
 bin: $(CMDs)
