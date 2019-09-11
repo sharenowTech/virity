@@ -1,0 +1,45 @@
+module github.com/sharenowTech/virity
+
+go 1.12
+
+require (
+	github.com/Microsoft/go-winio v0.4.7
+	github.com/coreos/etcd v3.3.8+incompatible
+	github.com/coreos/go-semver v0.2.0
+	github.com/docker/distribution v2.6.2+incompatible
+	github.com/docker/docker v1.13.1
+	github.com/docker/go-connections v0.3.0
+	github.com/docker/go-units v0.3.3
+	github.com/fsnotify/fsnotify v1.4.7
+	github.com/ghodss/yaml v1.0.0
+	github.com/gogo/protobuf v1.0.0
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/protobuf v1.1.0
+	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
+	github.com/googleapis/gnostic v0.2.0
+	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
+	github.com/json-iterator/go v0.0.0-20180315132816-ca39e5af3ece
+	github.com/magiconair/properties v1.8.0
+	github.com/mitchellh/mapstructure v0.0.0-20180511142126-bb74f1db0675
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+	github.com/modern-go/reflect2 v0.0.0-20180228065516-1df9eeb2bb81
+	github.com/pelletier/go-toml v1.2.0
+	github.com/pkg/errors v0.8.0
+	github.com/sirupsen/logrus v0.0.0-20180618111419-75068beb13ad
+	github.com/spf13/afero v1.1.1
+	github.com/spf13/cast v1.2.0
+	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+	github.com/spf13/pflag v1.0.1
+	github.com/spf13/viper v1.0.2
+	github.com/ugorji/go v1.1.1
+	golang.org/x/crypto v0.0.0-20180621125126-a49355c7e3f8
+	golang.org/x/net v0.0.0-20180621144259-afe8f62b1d6b
+	golang.org/x/sys v0.0.0-20180620133508-ad87a3a340fa
+	golang.org/x/text v0.3.0
+	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
+	gopkg.in/inf.v0 v0.9.1
+	gopkg.in/yaml.v2 v2.2.1
+	k8s.io/api v0.0.0-20180621150346-0629ca67c7ad
+	k8s.io/apimachinery v0.0.0-20180228050457-302974c03f7e
+	k8s.io/client-go v7.0.0+incompatible
+)
