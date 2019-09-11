@@ -1,8 +1,8 @@
 package worker
 
 import (
-	"github.com/car2go/virity/cmd/server/worker/task"
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/cmd/server/worker/task"
+	"github.com/sharenowTech/virity/internal/log"
 )
 
 // Worker represents the worker that executes the job

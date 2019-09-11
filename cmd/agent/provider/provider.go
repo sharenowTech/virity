@@ -1,6 +1,6 @@
 package provider
 
-import "github.com/car2go/virity/internal/pluginregistry"
+import "github.com/sharenowTech/virity/internal/pluginregistry"
 
 type Provider interface {
 	GetHostInfo() (HostInfo, error)

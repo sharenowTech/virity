@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/car2go/virity/cmd/agent/provider"
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/cmd/agent/provider"
+	"github.com/sharenowTech/virity/internal/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"

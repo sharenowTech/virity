@@ -7,9 +7,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/log"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/log"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 // MonitorStatus is the type for monitoring status based on an integer (to create a enum like structure)

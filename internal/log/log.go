@@ -4,7 +4,7 @@ package log
 import (
 	"os"
 
-	"github.com/car2go/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,17 +61,17 @@ func Critical(f Fields, message string) {
 }
 
 func Debugf(f Fields, format string, a ...interface{}) {
-	log.WithFields(log.Fields(f)).Debugf(format, a)
+	log.WithFields(log.Fields(f)).Debugf(format, a...)
 }
 func Infof(f Fields, format string, a ...interface{}) {
-	log.WithFields(log.Fields(f)).Infof(format, a)
+	log.WithFields(log.Fields(f)).Infof(format, a...)
 }
 func Warnf(f Fields, format string, a ...interface{}) {
-	log.WithFields(log.Fields(f)).Warnf(format, a)
+	log.WithFields(log.Fields(f)).Warnf(format, a...)
 }
 func Errorf(f Fields, format string, a ...interface{}) {
-	log.WithFields(log.Fields(f)).Errorf(format, a)
+	log.WithFields(log.Fields(f)).Errorf(format, a...)
 }
 func Criticalf(f Fields, format string, a ...interface{}) {
-	log.WithFields(log.Fields(f)).Fatalf(format, a)
+	log.WithFields(log.Fields(f)).Fatalf(format, a...)
 }

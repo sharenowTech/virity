@@ -1,6 +1,6 @@
 package image
 
-import "github.com/car2go/virity/internal/pluginregistry"
+import "github.com/sharenowTech/virity/internal/pluginregistry"
 
 func evalStatus(vuln []pluginregistry.CVE, severityLevel pluginregistry.VulnSeverity) pluginregistry.MonitorStatus {
 	status := pluginregistry.StatusOK

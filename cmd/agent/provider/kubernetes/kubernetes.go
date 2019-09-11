@@ -3,8 +3,8 @@ package kubernetes
 import (
 	"strings"
 
-	"github.com/car2go/virity/cmd/agent/provider"
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/cmd/agent/provider"
+	"github.com/sharenowTech/virity/internal/log"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

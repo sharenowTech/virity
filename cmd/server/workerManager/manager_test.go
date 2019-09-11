@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/pluginregistry"
-	_ "github.com/car2go/virity/internal/store/etcd"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
+	_ "github.com/sharenowTech/virity/internal/store/etcd"
 )
 
 func TestManagerUpdate(t *testing.T) {

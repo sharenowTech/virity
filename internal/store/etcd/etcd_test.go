@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/car2go/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/config"
 
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 func TestStore(t *testing.T) {

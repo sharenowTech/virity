@@ -8,15 +8,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/car2go/virity/cmd/agent/provider"
-	"github.com/car2go/virity/cmd/agent/provider/docker"
-	"github.com/car2go/virity/cmd/agent/provider/kubernetes"
+	"github.com/sharenowTech/virity/cmd/agent/provider"
+	"github.com/sharenowTech/virity/cmd/agent/provider/docker"
+	"github.com/sharenowTech/virity/cmd/agent/provider/kubernetes"
 
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/log"
-	"github.com/car2go/virity/internal/pluginregistry"
-	"github.com/car2go/virity/internal/schedule"
-	_ "github.com/car2go/virity/internal/store/etcd"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/log"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/schedule"
+	_ "github.com/sharenowTech/virity/internal/store/etcd"
 )
 
 const ownerKey = "virity.owner"

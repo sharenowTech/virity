@@ -52,7 +52,7 @@ func init() {
 	viper.AddConfigPath("/etc/virity/")  // path to look for the config file in
 	viper.AddConfigPath("$HOME/.virity") // call multiple times to add many search paths
 	viper.AddConfigPath(".")             // optionally look for config in the working directory
-	viper.AddConfigPath("$GOPATH/src/github.com/car2go/virity")
+	viper.AddConfigPath("$GOPATH/src/github.com/sharenowTech/virity")
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
 		fmt.Println("No config file found. Using default configuration")

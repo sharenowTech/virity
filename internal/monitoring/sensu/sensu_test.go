@@ -3,8 +3,8 @@ package sensu
 import (
 	"testing"
 
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 func TestPush(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 func TestSendToTCP(t *testing.T) {

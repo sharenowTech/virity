@@ -3,13 +3,13 @@ package main
 import (
 	"strings"
 
-	"github.com/car2go/virity/cmd/server/workerManager"
-	"github.com/car2go/virity/internal/config"
-	"github.com/car2go/virity/internal/log"
-	_ "github.com/car2go/virity/internal/monitoring/sensu"
-	_ "github.com/car2go/virity/internal/scanner/anchore"
-	"github.com/car2go/virity/internal/schedule"
-	_ "github.com/car2go/virity/internal/store/etcd"
+	"github.com/sharenowTech/virity/cmd/server/workerManager"
+	"github.com/sharenowTech/virity/internal/config"
+	"github.com/sharenowTech/virity/internal/log"
+	_ "github.com/sharenowTech/virity/internal/monitoring/sensu"
+	_ "github.com/sharenowTech/virity/internal/scanner/anchore"
+	"github.com/sharenowTech/virity/internal/schedule"
+	_ "github.com/sharenowTech/virity/internal/store/etcd"
 )
 
 type imageID string

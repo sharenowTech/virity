@@ -3,7 +3,7 @@ package schedule
 import (
 	"time"
 
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/internal/log"
 )
 
 // Schedule a function using a interval

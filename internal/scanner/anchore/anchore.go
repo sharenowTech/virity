@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/car2go/virity/internal/log"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/internal/log"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 var severityMap = map[string]pluginregistry.VulnSeverity{

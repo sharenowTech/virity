@@ -3,8 +3,8 @@ package task
 import (
 	"sync"
 
-	"github.com/car2go/virity/cmd/server/image"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/cmd/server/image"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 // Queue is the task queue for the workers

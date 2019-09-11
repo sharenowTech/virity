@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/car2go/virity/cmd/server/worker"
-	"github.com/car2go/virity/cmd/server/worker/task"
-	"github.com/car2go/virity/internal/log"
-	"github.com/car2go/virity/internal/pluginregistry"
+	"github.com/sharenowTech/virity/cmd/server/worker"
+	"github.com/sharenowTech/virity/cmd/server/worker/task"
+	"github.com/sharenowTech/virity/internal/log"
+	"github.com/sharenowTech/virity/internal/pluginregistry"
 )
 
 const workers = 10

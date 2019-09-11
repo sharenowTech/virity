@@ -1,8 +1,8 @@
 package task
 
 import (
-	"github.com/car2go/virity/cmd/server/image"
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/cmd/server/image"
+	"github.com/sharenowTech/virity/internal/log"
 )
 
 // maintain Task to maintain the Environment

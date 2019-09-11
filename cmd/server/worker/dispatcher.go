@@ -1,8 +1,8 @@
 package worker
 
 import (
-	"github.com/car2go/virity/cmd/server/worker/task"
-	"github.com/car2go/virity/internal/log"
+	"github.com/sharenowTech/virity/cmd/server/worker/task"
+	"github.com/sharenowTech/virity/internal/log"
 )
 
 // Dispatcher holds workers and the WorkerPool to assign tasks
