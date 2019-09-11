@@ -149,9 +149,9 @@ func Send() error {
 
 	switch Environment {
 	case "k8s":
-		base = kubernetes.Provider{baseConfig}
+		base = kubernetes.Provider{BaseProvider: baseConfig}
 	default:
-		base = docker.Provider{baseConfig}
+		base = docker.Provider{BaseProvider: baseConfig}
 	}
 	host, containerList, err := getContainers(base)
 	if err != nil {

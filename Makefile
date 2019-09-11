@@ -13,15 +13,14 @@ test: dep
 	go test $(PKGS)
 
 BIN_DIR := $(GOPATH)/bin
-GOMETALINTER := $(BIN_DIR)/gometalinter
+GOMETALINTER := $(BIN_DIR)/golangci-lint
 
 $(GOMETALINTER):
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install > /dev/null
+	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0
 
 .PHONY: lint
 lint: $(GOMETALINTER)
-	gometalinter ./... --vendor --errors --deadline=2m --fast --linter='vet:go tool vet -composites=false {paths}:PATH:LINE:MESSAGE'
+	golangci-lint run ./... --fast --disable-all --enable govet
 
 .PHONY: docker-agent
 docker-agent:
