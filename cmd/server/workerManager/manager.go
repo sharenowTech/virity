@@ -46,13 +46,13 @@ func (man *Manager) delete(key string) {
 	man.agents.Delete(key)
 }
 
-// Refresh updates Manager and pull latest agents from store
+// Refresh updates Manager with latest Agents from the Store
 func Refresh(store pluginregistry.Store) error {
-	return defManager.Refresh(store)
+	return defManager.refresh(store)
 }
 
-// Refresh updates Manager and pull latest agents from store
-func (man *Manager) Refresh(store pluginregistry.Store) error {
+// refresh updates Manager with latest Agents from the Store
+func (man *Manager) refresh(store pluginregistry.Store) error {
 	agents, err := store.LoadAgents()
 	if err != nil {
 		return err
@@ -75,11 +75,11 @@ func (man *Manager) Refresh(store pluginregistry.Store) error {
 
 // Restore restores data from the store. It should be called only on first run
 func Restore(p Plugins, cycleID int) error {
-	return defManager.Restore(p, cycleID)
+	return defManager.restore(p, cycleID)
 }
 
 // Restore restores data from the store. It should be called only on first run
-func (man *Manager) Restore(p Plugins, cycleID int) error {
+func (man *Manager) restore(p Plugins, cycleID int) error {
 	var wg sync.WaitGroup
 
 	template := task.New(&wg, cycleID, 0, p.Store, p.Scanner, p.Monitor)
@@ -98,51 +98,51 @@ func (man *Manager) Restore(p Plugins, cycleID int) error {
 
 // Run creates and manages new workers.
 func Run(p Plugins, cycleID int) {
-	defManager.Run(p, cycleID)
+	defManager.run(p, cycleID)
 }
 
-// Run creates and manages new workers.
-func (man *Manager) Run(p Plugins, cycleID int) {
+// Run creates and manages new workers with tasks for all reported agents
+func (man *Manager) run(p Plugins, cycleID int) {
 	running := pluginregistry.ContainerGroup{}
 	analyse := pluginregistry.ContainerGroup{}
 
 	man.agents.Range(func(k, v interface{}) bool {
-		key := k.(string)
-		val := v.(agent)
+		agentID := k.(string)
+		agentData := v.(agent)
 
-		cGroup, err := fetchCGroup(1*time.Minute, val.data, p.Store)
+		cGroup, err := fetchCGroup(1*time.Minute, agentData.data, p.Store)
 		if err != nil {
 			log.Error(log.Fields{
 				"package":  "main/workerManager",
 				"function": "Run",
 				"error":    err.Error(),
-				"agent":    key,
+				"agent":    agentID,
 			}, "Worker manager noticed an error while fetching a container group - this group/agent will be omitted in this cycle")
 			return true
 		}
 
 		// If agent was not just created (if agent has a lastestCGroupID)
-		if val.latestCGroupID != 0 {
-			then := time.Unix(val.latestCGroupID, 0)
+		if agentData.latestCGroupID != 0 {
+			then := time.Unix(agentData.latestCGroupID, 0)
 			duration := time.Since(then)
 
 			// if agent is inactive
-			if duration > val.data.Lifetime {
-				val.active = false
-				man.agents.Store(key, val)
+			if duration > agentData.data.Lifetime {
+				agentData.active = false
+				man.agents.Store(agentID, agentData)
 				return true
 			}
 		}
 
 		// If something has changed during last fetch, analyze these images
-		if val.latestCGroupID != cGroup.ID {
+		if agentData.latestCGroupID != cGroup.ID {
 			analyse.Container = append(analyse.Container, cGroup.Container...)
 		}
 		running.Container = append(running.Container, cGroup.Container...)
 
-		val.lastCheck = time.Now()
-		val.latestCGroupID = cGroup.ID
-		man.agents.Store(key, val)
+		agentData.lastCheck = time.Now()
+		agentData.latestCGroupID = cGroup.ID
+		man.agents.Store(agentID, agentData)
 
 		return true
 	})
@@ -179,11 +179,11 @@ func (man *Manager) Run(p Plugins, cycleID int) {
 
 // CleanUp store and manager data
 func CleanUp(store pluginregistry.Store) error {
-	return defManager.CleanUp(store)
+	return defManager.cleanUp(store)
 }
 
 // CleanUp store and manager data
-func (man *Manager) CleanUp(store pluginregistry.Store) error {
+func (man *Manager) cleanUp(store pluginregistry.Store) error {
 	var globErr error
 	man.agents.Range(func(k, v interface{}) bool {
 		key := k.(string)
