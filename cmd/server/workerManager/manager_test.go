@@ -62,7 +62,7 @@ func TestManagerUpdate(t *testing.T) {
 		Lifetime:     2 * time.Hour,
 	})
 
-	err = defManager.Refresh(store)
+	err = defManager.refresh(store)
 	if err != nil {
 		t.Error(err)
 		return
